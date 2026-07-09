@@ -15,12 +15,21 @@ cp .env.example .env
 # then edit .env: set SECRET_KEY, MAIL_USERNAME, MAIL_PASSWORD, APP_BASE_URL, PORT
 # (PORT only if 8080 is already taken on this machine — keep APP_BASE_URL in sync with it)
 
-python3.10 run.py        # creates instance/app.db, runs migrations-less seed on first run
+export FLASK_APP=run.py
+python3.10 -m flask db upgrade   # creates instance/app.db via migrations — run this BEFORE run.py, always
+python3.10 run.py                # seeds the two default accounts (idempotent)
 ```
+
+**Always create the DB via `flask db upgrade`, never let `python3.10 run.py` create it first.** `run.py`'s `seed_db()` also calls `db.create_all()` as a safety net, but that builds tables straight from the current models without going through Alembic, so it never stamps `alembic_version`. If that happens (DB already has tables but `flask db upgrade` was never run once), a later `flask db upgrade` will try to replay migrations from the very start and fail with "duplicate column" errors, because the columns those early migrations add already exist. Fix by stamping the DB at the revision matching what it actually already has, then upgrading normally, e.g.:
+```bash
+python3.10 -m flask db stamp <revision_before_the_missing_one>
+python3.10 -m flask db upgrade
+```
+(check `migrations/versions/` for the right revision id — it's the one whose migration is the last one your DB already reflects).
 
 `instance/app.db` and `uploads/` (real user data — result files, DB rows) are **not** in git; they're excluded on purpose (see `.gitignore`). Copy them over separately (e.g. `scp`/`rsync`/USB) from the old machine if you need the existing data — otherwise the app starts with just the two seed accounts below.
 
-If migrating an existing `instance/app.db` to a fresh checkout, run `flask db upgrade` (with `FLASK_APP=run.py` exported) instead of relying on `seed_db()`, so any migrations added after the DB was copied get applied.
+After every `git pull`, if `migrations/versions/` has new files, run `flask db upgrade` again before restarting the app.
 
 ## Running the app
 
