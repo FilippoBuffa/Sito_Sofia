@@ -42,20 +42,21 @@
           <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip"
              title="Enter a date if the report is needed by a specific time. Leave blank if no deadline."></i>
         </label>
-        <input type="date" name="need_by_date" class="form-control" min="{{ today }}" />
+        <input type="date" name="need_by_date" class="form-control" min="{{ today }}"
+               value="{{ fv('need_by_date', form_data) }}" />
       </div>
 
       <div class="col-12 col-md-4">
         <label class="form-label fw-semibold">
-          Priority
+          Priority <span class="text-danger">*</span>
           <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip"
              title="High = Existing Customer Request/Complaint | Medium = Potential Customer Request | Low = Internal Development/Other"></i>
         </label>
         <select name="priority" class="form-select" required>
-          <option value="" disabled selected>Select priority…</option>
-          <option value="high">High — Customer Request/Complaint</option>
-          <option value="medium">Medium — Potential Customer Request</option>
-          <option value="low">Low — Internal Development/Other</option>
+          <option value="" disabled {{ 'selected' if not (form_data and form_data.get('priority')) else '' }}>Select priority…</option>
+          <option value="high" {{ 'selected' if form_data and form_data.get('priority') == 'high' else '' }}>High — Customer Request/Complaint</option>
+          <option value="medium" {{ 'selected' if form_data and form_data.get('priority') == 'medium' else '' }}>Medium — Potential Customer Request</option>
+          <option value="low" {{ 'selected' if form_data and form_data.get('priority') == 'low' else '' }}>Low — Internal Development/Other</option>
         </select>
       </div>
 
@@ -69,7 +70,7 @@
                 onchange="inheritField('location', this.value)">
           <option value="">— Select location —</option>
           {% for val, label in location_choices %}
-            <option value="{{ val }}">{{ label }}</option>
+            <option value="{{ val }}" {{ 'selected' if form_data and form_data.get('location') == val else '' }}>{{ label }}</option>
           {% endfor %}
         </select>
       </div>
@@ -81,6 +82,7 @@
              title="Department submitting the request."></i>
         </label>
         <input type="text" name="department" id="ti_department" class="form-control"
+               value="{{ fv('department', form_data) }}"
                maxlength="128" placeholder="e.g. R&D, Quality"
                oninput="inheritField('department', this.value)" />
       </div>
@@ -92,6 +94,7 @@
              title="Project name or number (optional)."></i>
         </label>
         <input type="text" name="project" class="form-control"
+               value="{{ fv('project', form_data) }}"
                maxlength="128" placeholder="e.g. Project Alpha (optional)" />
       </div>
 
@@ -103,6 +106,7 @@
         </label>
         <input type="text" name="valve_type" id="ti_valve_type" class="form-control"
                list="valveTypeList" maxlength="128" placeholder="Type or select…"
+               value="{{ fv('valve_type', form_data) }}"
                oninput="inheritField('valve_type', this.value)"
                onchange="toggleValveOther('ti', this.value)" />
         <datalist id="valveTypeList">
@@ -112,9 +116,11 @@
         </datalist>
       </div>
 
-      <div class="col-12 col-md-4" id="ti_valve_other_wrap" style="display:none;">
+      <div class="col-12 col-md-4" id="ti_valve_other_wrap"
+           style="display:{{ 'block' if form_data and form_data.get('valve_type', '').lower() == 'other' else 'none' }};">
         <label class="form-label fw-semibold">Describe Valve Type</label>
         <input type="text" name="valve_type_other" id="ti_valve_type_other" class="form-control"
+               value="{{ fv('valve_type_other', form_data) }}"
                maxlength="128" placeholder="Describe the valve type…"
                oninput="inheritField('valve_type_other', this.value)" />
       </div>
@@ -126,6 +132,7 @@
              title="Customer or internal part number (optional)."></i>
         </label>
         <input type="text" name="part_number" id="ti_part_number" class="form-control"
+               value="{{ fv('part_number', form_data) }}"
                maxlength="128" placeholder="e.g. VL-12345"
                oninput="inheritField('part_number', this.value)" />
       </div>
@@ -147,9 +154,9 @@
              title="Air testing is mostly used to characterize function (more sensitive). Specify water if the application uses liquid."></i>
         </label>
         <select name="fluid" class="form-select">
-          <option value="" disabled selected>Select fluid…</option>
-          <option value="air">Air</option>
-          <option value="water">Water</option>
+          <option value="" disabled {{ 'selected' if not (form_data and form_data.get('fluid')) else '' }}>Select fluid…</option>
+          <option value="air" {{ 'selected' if form_data and form_data.get('fluid') == 'air' else '' }}>Air</option>
+          <option value="water" {{ 'selected' if form_data and form_data.get('fluid') == 'water' else '' }}>Water</option>
         </select>
       </div>
 
@@ -160,6 +167,7 @@
              title="If purpose is to develop baseline, parts will be tested to the maximum recommended forward pressure. If for a specific application, specify the maximum forward pressure for that application."></i>
         </label>
         <input type="text" name="max_forward_pressure" class="form-control"
+               value="{{ fv('max_forward_pressure', form_data) }}"
                placeholder="e.g. 4200 mbar" maxlength="64" />
       </div>
 
@@ -172,12 +180,14 @@
         <div class="d-flex gap-3 pt-2">
           <div class="form-check">
             <input class="form-check-input" type="radio" name="report_type"
-                   id="rt_data" value="data_only" />
+                   id="rt_data" value="data_only"
+                   {{ 'checked' if form_data and form_data.get('report_type') == 'data_only' else '' }} />
             <label class="form-check-label" for="rt_data">Data Only</label>
           </div>
           <div class="form-check">
             <input class="form-check-input" type="radio" name="report_type"
-                   id="rt_custom" value="custom" />
+                   id="rt_custom" value="custom"
+                   {{ 'checked' if form_data and form_data.get('report_type') == 'custom' else '' }} />
             <label class="form-check-label" for="rt_custom">Custom</label>
           </div>
         </div>
@@ -190,7 +200,7 @@
              title="Any specific notes or requirements for the report."></i>
         </label>
         <textarea name="report_notes" class="form-control" rows="2"
-                  placeholder="Optional notes for the report…" maxlength="1000"></textarea>
+                  placeholder="Optional notes for the report…" maxlength="1000">{{ fv('report_notes', form_data) }}</textarea>
       </div>
 
       <div class="col-12 col-md-3">
@@ -202,24 +212,28 @@
         <div class="d-flex gap-3 pt-2">
           <div class="form-check">
             <input class="form-check-input" type="radio" name="previously_tested"
-                   id="prev_yes" value="yes" onchange="togglePrevTR(true)" />
+                   id="prev_yes" value="yes" onchange="togglePrevTR(true)"
+                   {{ 'checked' if form_data and form_data.get('previously_tested') == 'yes' else '' }} />
             <label class="form-check-label" for="prev_yes">Yes</label>
           </div>
           <div class="form-check">
             <input class="form-check-input" type="radio" name="previously_tested"
-                   id="prev_no" value="no" checked onchange="togglePrevTR(false)" />
+                   id="prev_no" value="no" onchange="togglePrevTR(false)"
+                   {{ 'checked' if not (form_data and form_data.get('previously_tested') == 'yes') else '' }} />
             <label class="form-check-label" for="prev_no">No</label>
           </div>
         </div>
       </div>
 
-      <div class="col-12 col-md-3" id="prevTRField" style="display:none;">
+      <div class="col-12 col-md-3" id="prevTRField"
+           style="display:{{ 'block' if form_data and form_data.get('previously_tested') == 'yes' else 'none' }};">
         <label class="form-label fw-semibold">
           Previous TR Number(s)
           <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip"
              title="Enter previous test request numbers if applicable."></i>
         </label>
         <input type="text" name="previous_tr_numbers" class="form-control"
+               value="{{ fv('previous_tr_numbers', form_data) }}"
                placeholder="e.g. TR-2023-00123" maxlength="256" />
       </div>
 
@@ -230,7 +244,7 @@
              title="Describe the purpose for testing. Examples: 1) Develop baseline data, 2) Determine if parts meet spec, 3) Compare to existing data, 4) Compare experimental vs control."></i>
         </label>
         <textarea name="test_purpose" class="form-control" rows="3"
-                  placeholder="Describe the purpose of this test request…" maxlength="2000"></textarea>
+                  placeholder="Describe the purpose of this test request…" maxlength="2000">{{ fv('test_purpose', form_data) }}</textarea>
       </div>
 
       <div class="col-12">
@@ -240,7 +254,7 @@
              title="Provide any additional information or instructions about the test, if necessary."></i>
         </label>
         <textarea name="additional_instructions" class="form-control" rows="2"
-                  placeholder="Any additional instructions…" maxlength="2000"></textarea>
+                  placeholder="Any additional instructions…" maxlength="2000">{{ fv('additional_instructions', form_data) }}</textarea>
       </div>
 
     </div>
@@ -252,6 +266,12 @@
     <p class="text-muted" style="font-size:0.88rem;">
       Attach up to 3 files (any format, max 10 MB each). These will be visible to the lab engineer.
     </p>
+    {% if form_data %}
+    <p class="text-warning small">
+      <i class="bi bi-exclamation-triangle me-1"></i>
+      Please re-select your attachment files — browsers don't preserve file selections when a form is redisplayed after an error.
+    </p>
+    {% endif %}
     <div class="row g-2">
       <div class="col-12 col-md-4">
         <input type="file" name="attachments" class="form-control" />
@@ -272,17 +292,20 @@
         <i class="bi bi-boxes me-2"></i>Part Groups
       </div>
       <span class="text-muted" style="font-size:0.85rem;">
-        <span id="groupCount">1</span> / 10 groups
+        <span id="groupCount">{{ total_groups }}</span> / 10 groups
       </span>
     </div>
 
-    <input type="hidden" name="num_groups" id="numGroups" value="1" />
+    <input type="hidden" name="num_groups" id="numGroups" value="{{ total_groups }}" />
 
     <div id="partGroupsContainer">
-      {{ _part_group_form('A', 0) }}
+      {% for i in range(total_groups) %}
+        {{ _part_group_form(group_letters[i], i, form_data) }}
+      {% endfor %}
     </div>
 
-    <button type="button" class="add-group-btn mt-2" id="addGroupBtn" onclick="addGroup()">
+    <button type="button" class="add-group-btn mt-2" id="addGroupBtn" onclick="addGroup()"
+            {{ 'disabled' if total_groups >= 10 else '' }}>
       <i class="bi bi-plus-circle me-1"></i> Add Part Group
     </button>
   </div>
@@ -297,7 +320,10 @@
 </form>
 {% endblock %}
 
-{% macro _part_group_form(letter, index) %}
+{% macro fv(name, form_data) %}{{- (form_data.get(name) if form_data else none) or '' -}}{% endmacro %}
+{% macro gv(letter, field, form_data) %}{{- (form_data.get('group_' ~ letter ~ '_' ~ field) if form_data else none) or '' -}}{% endmacro %}
+
+{% macro _part_group_form(letter, index, form_data=None) %}
 <div class="part-group-section" id="group_{{ letter }}">
   <div class="part-group-title">
     <i class="bi bi-box-seam me-1"></i> Group {{ letter }}
@@ -315,7 +341,7 @@
       <select name="group_{{ letter }}_location" class="form-select group-location">
         <option value="">— inherit from Test Info —</option>
         {% for val, label in location_choices %}
-          <option value="{{ val }}">{{ label }}</option>
+          <option value="{{ val }}" {{ 'selected' if form_data and form_data.get('group_' ~ letter ~ '_location') == val else '' }}>{{ label }}</option>
         {% endfor %}
       </select>
     </div>
@@ -324,18 +350,22 @@
       <label class="form-label">Valve Type</label>
       <input type="text" name="group_{{ letter }}_valve_type" class="form-control group-valve-type"
              list="valveTypeList" maxlength="128" placeholder="inherit from Test Info"
+             value="{{ gv(letter, 'valve_type', form_data) }}"
              onchange="toggleValveOther('{{ letter }}', this.value)" />
     </div>
 
-    <div class="col-12 col-md-3" id="valve_other_{{ letter }}" style="display:none;">
+    <div class="col-12 col-md-3" id="valve_other_{{ letter }}"
+         style="display:{{ 'block' if form_data and form_data.get('group_' ~ letter ~ '_valve_type', '').lower() == 'other' else 'none' }};">
       <label class="form-label">Describe Valve Type</label>
-      <input type="text" name="group_{{ letter }}_valve_type_other" class="form-control" maxlength="128" />
+      <input type="text" name="group_{{ letter }}_valve_type_other" class="form-control" maxlength="128"
+             value="{{ gv(letter, 'valve_type_other', form_data) }}" />
     </div>
 
     <div class="col-12 col-md-3">
       <label class="form-label">Part Number</label>
       <input type="text" name="group_{{ letter }}_part_number" class="form-control group-part-number"
-             maxlength="128" placeholder="inherit from Test Info" />
+             maxlength="128" placeholder="inherit from Test Info"
+             value="{{ gv(letter, 'part_number', form_data) }}" />
     </div>
 
     <div class="col-12 col-md-4">
@@ -345,17 +375,19 @@
            title="Identification for this group of parts. Label the parts before sending. If left blank, the testlab will assign one."></i>
       </label>
       <input type="text" name="group_{{ letter }}_group_id" class="form-control"
-             placeholder="e.g. VL-12345 or Group A" maxlength="64" />
+             placeholder="e.g. VL-12345 or Group A" maxlength="64"
+             value="{{ gv(letter, 'group_id', form_data) }}" />
     </div>
 
     <div class="col-12 col-md-2">
       <label class="form-label">
-        Quantity
+        Quantity <span class="text-danger">*</span>
         <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip"
            title="Minimum number of test samples in this group. 30 is standard for developing baseline data."></i>
       </label>
-      <input type="number" name="group_{{ letter }}_quantity" class="form-control"
-             min="1" max="9999" placeholder="e.g. 30" />
+      <input type="number" name="group_{{ letter }}_quantity" class="form-control" required
+             min="1" max="9999" placeholder="e.g. 30"
+             value="{{ gv(letter, 'quantity', form_data) }}" />
     </div>
 
     <div class="col-12 col-md-3">
@@ -366,7 +398,7 @@
       </label>
       <select name="group_{{ letter }}_group_type" class="form-select">
         {% for val, label in group_type_choices %}
-          <option value="{{ val }}">{{ label }}</option>
+          <option value="{{ val }}" {{ 'selected' if form_data and form_data.get('group_' ~ letter ~ '_group_type') == val else '' }}>{{ label }}</option>
         {% endfor %}
       </select>
     </div>
@@ -378,9 +410,9 @@
            title="Inspection status. Parts are not inspected by the testlab prior to testing."></i>
       </label>
       <select name="group_{{ letter }}_inspected" class="form-select">
-        <option value="">Unknown</option>
-        <option value="yes">Yes</option>
-        <option value="no">No</option>
+        <option value="" {{ 'selected' if not (form_data and form_data.get('group_' ~ letter ~ '_inspected')) else '' }}>Unknown</option>
+        <option value="yes" {{ 'selected' if form_data and form_data.get('group_' ~ letter ~ '_inspected') == 'yes' else '' }}>Yes</option>
+        <option value="no" {{ 'selected' if form_data and form_data.get('group_' ~ letter ~ '_inspected') == 'no' else '' }}>No</option>
       </select>
     </div>
 
@@ -392,18 +424,20 @@
       </label>
       <select name="group_{{ letter }}_manufacturing_process" class="form-select mfg-select"
               onchange="toggleMfgOther(this, '{{ letter }}')">
-        <option value="" disabled selected>Select type…</option>
+        <option value="" disabled {{ 'selected' if not (form_data and form_data.get('group_' ~ letter ~ '_manufacturing_process')) else '' }}>Select type…</option>
         {% for val, label in manufacturing_process_choices %}
-          <option value="{{ val }}">{{ label }}</option>
+          <option value="{{ val }}" {{ 'selected' if form_data and form_data.get('group_' ~ letter ~ '_manufacturing_process') == val else '' }}>{{ label }}</option>
         {% endfor %}
       </select>
     </div>
 
-    <div class="col-12" id="mfg_other_{{ letter }}" style="display:none;">
+    <div class="col-12" id="mfg_other_{{ letter }}"
+         style="display:{{ 'block' if form_data and form_data.get('group_' ~ letter ~ '_manufacturing_process') == 'other' else 'none' }};">
       <label class="form-label">Describe Manufacturing Process</label>
       <input type="text" name="group_{{ letter }}_manufacturing_process_other"
              class="form-control" maxlength="256"
-             placeholder="Describe the manufacturing process…" />
+             placeholder="Describe the manufacturing process…"
+             value="{{ gv(letter, 'manufacturing_process_other', form_data) }}" />
     </div>
 
     <div class="col-12">
@@ -417,31 +451,38 @@
       <div class="row g-2">
         <div class="col-12 col-md-4">
           <label class="form-label">Part Type</label>
-          <input type="text" name="group_{{ letter }}_part_type" class="form-control" maxlength="128" />
+          <input type="text" name="group_{{ letter }}_part_type" class="form-control" maxlength="128"
+                 value="{{ gv(letter, 'part_type', form_data) }}" />
         </div>
         <div class="col-12 col-md-4">
           <label class="form-label">VL Part Number</label>
-          <input type="text" name="group_{{ letter }}_vl_part_number" class="form-control" maxlength="64" />
+          <input type="text" name="group_{{ letter }}_vl_part_number" class="form-control" maxlength="64"
+                 value="{{ gv(letter, 'vl_part_number', form_data) }}" />
         </div>
         <div class="col-12 col-md-4">
           <label class="form-label">VA Number</label>
-          <input type="text" name="group_{{ letter }}_va_number" class="form-control" maxlength="64" />
+          <input type="text" name="group_{{ letter }}_va_number" class="form-control" maxlength="64"
+                 value="{{ gv(letter, 'va_number', form_data) }}" />
         </div>
         <div class="col-12 col-md-3">
           <label class="form-label">X Number</label>
-          <input type="text" name="group_{{ letter }}_x_number" class="form-control" maxlength="64" />
+          <input type="text" name="group_{{ letter }}_x_number" class="form-control" maxlength="64"
+                 value="{{ gv(letter, 'x_number', form_data) }}" />
         </div>
         <div class="col-12 col-md-3">
           <label class="form-label">Material Lab Code</label>
-          <input type="text" name="group_{{ letter }}_material_lab_code" class="form-control" maxlength="64" />
+          <input type="text" name="group_{{ letter }}_material_lab_code" class="form-control" maxlength="64"
+                 value="{{ gv(letter, 'material_lab_code', form_data) }}" />
         </div>
         <div class="col-12 col-md-3">
           <label class="form-label">Material Prod. Code</label>
-          <input type="text" name="group_{{ letter }}_material_prod_code" class="form-control" maxlength="64" />
+          <input type="text" name="group_{{ letter }}_material_prod_code" class="form-control" maxlength="64"
+                 value="{{ gv(letter, 'material_prod_code', form_data) }}" />
         </div>
         <div class="col-12 col-md-3">
           <label class="form-label">Batch No</label>
-          <input type="text" name="group_{{ letter }}_batch_no" class="form-control" maxlength="64" />
+          <input type="text" name="group_{{ letter }}_batch_no" class="form-control" maxlength="64"
+                 value="{{ gv(letter, 'batch_no', form_data) }}" />
         </div>
         <div class="col-12 col-md-3">
           <label class="form-label">
@@ -449,7 +490,8 @@
             <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip"
                title="Optional alternate batch number if applicable."></i>
           </label>
-          <input type="text" name="group_{{ letter }}_alternate_batch_no" class="form-control" maxlength="64" />
+          <input type="text" name="group_{{ letter }}_alternate_batch_no" class="form-control" maxlength="64"
+                 value="{{ gv(letter, 'alternate_batch_no', form_data) }}" />
         </div>
         <div class="col-12 col-md-3">
           <label class="form-label">
@@ -457,11 +499,13 @@
             <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip"
                title="Where the parts were produced."></i>
           </label>
-          <input type="text" name="group_{{ letter }}_production_location" class="form-control" maxlength="128" />
+          <input type="text" name="group_{{ letter }}_production_location" class="form-control" maxlength="128"
+                 value="{{ gv(letter, 'production_location', form_data) }}" />
         </div>
         <div class="col-12 col-md-3">
           <label class="form-label">Mold Date</label>
-          <input type="date" name="group_{{ letter }}_mold_date" class="form-control" />
+          <input type="date" name="group_{{ letter }}_mold_date" class="form-control"
+                 value="{{ gv(letter, 'mold_date', form_data) }}" />
         </div>
         <div class="col-12 col-md-3">
           <label class="form-label">
@@ -470,11 +514,13 @@
                title="e.g. 4h @ 180°C"></i>
           </label>
           <input type="text" name="group_{{ letter }}_post_cure" class="form-control"
-                 maxlength="128" placeholder="e.g. 4h @ 180°C" />
+                 maxlength="128" placeholder="e.g. 4h @ 180°C"
+                 value="{{ gv(letter, 'post_cure', form_data) }}" />
         </div>
         <div class="col-12 col-md-3">
           <label class="form-label">Mold T-# (Unit #)</label>
-          <input type="text" name="group_{{ letter }}_mold_tool_number" class="form-control" maxlength="64" />
+          <input type="text" name="group_{{ letter }}_mold_tool_number" class="form-control" maxlength="64"
+                 value="{{ gv(letter, 'mold_tool_number', form_data) }}" />
         </div>
         <div class="col-12">
           <label class="form-label">
@@ -483,7 +529,7 @@
                title="Fill in any other pertinent information not covered above."></i>
           </label>
           <textarea name="group_{{ letter }}_other_description" class="form-control"
-                    rows="2" maxlength="1000"></textarea>
+                    rows="2" maxlength="1000">{{ gv(letter, 'other_description', form_data) }}</textarea>
         </div>
       </div>
     </div>
@@ -497,7 +543,7 @@
 const GROUP_LETTERS = {{ group_letters | tojson }};
 const LOCATION_CHOICES = {{ location_choices | tojson }};
 const VALVE_TYPES = {{ valve_types | tojson }};
-let currentGroups = 1;
+let currentGroups = {{ total_groups }};
 
 // ── Inheritance: Test Info → all groups ──────────────────────────
 function inheritField(field, value) {
@@ -669,8 +715,8 @@ function buildGroupHTML(letter, index) {
         <input type="text" name="group_${letter}_group_id" class="form-control" maxlength="64" />
       </div>
       <div class="col-12 col-md-2">
-        <label class="form-label">Quantity</label>
-        <input type="number" name="group_${letter}_quantity" class="form-control" min="1" max="9999" />
+        <label class="form-label">Quantity <span class="text-danger">*</span></label>
+        <input type="number" name="group_${letter}_quantity" class="form-control" required min="1" max="9999" />
       </div>
       <div class="col-12 col-md-3">
         <label class="form-label">Group Type</label>

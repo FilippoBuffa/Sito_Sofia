@@ -40,7 +40,7 @@
       </div>
 
       <div class="col-12 col-md-4">
-        <label class="form-label fw-semibold">Priority</label>
+        <label class="form-label fw-semibold">Priority <span class="text-danger">*</span></label>
         <select name="priority" class="form-select" required>
           <option value="" disabled>Select priority…</option>
           <option value="high" {% if req.priority == 'high' %}selected{% endif %}>High — Customer Request/Complaint</option>
@@ -271,8 +271,8 @@
              value="{{ pg.group_id or '' }}" maxlength="64" />
     </div>
     <div class="col-12 col-md-2">
-      <label class="form-label">Quantity</label>
-      <input type="number" name="group_{{ letter }}_quantity" class="form-control"
+      <label class="form-label">Quantity <span class="text-danger">*</span></label>
+      <input type="number" name="group_{{ letter }}_quantity" class="form-control" required
              value="{{ pg.quantity or '' }}" min="1" max="9999" />
     </div>
     <div class="col-12 col-md-3">
@@ -493,8 +493,8 @@ function buildGroupHTML(letter) {
         <input type="text" name="group_${letter}_part_number" class="form-control group-part-number" maxlength="128" /></div>
       <div class="col-12 col-md-4"><label class="form-label">Group ID</label>
         <input type="text" name="group_${letter}_group_id" class="form-control" maxlength="64" /></div>
-      <div class="col-12 col-md-2"><label class="form-label">Quantity</label>
-        <input type="number" name="group_${letter}_quantity" class="form-control" min="1" max="9999" /></div>
+      <div class="col-12 col-md-2"><label class="form-label">Quantity <span class="text-danger">*</span></label>
+        <input type="number" name="group_${letter}_quantity" class="form-control" required min="1" max="9999" /></div>
       <div class="col-12 col-md-3"><label class="form-label">Group Type</label>
         <select name="group_${letter}_group_type" class="form-select">${groupTypeOptions}</select></div>
       <div class="col-12 col-md-3"><label class="form-label">Samples Inspected?</label>

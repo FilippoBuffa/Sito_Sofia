@@ -74,7 +74,7 @@ def new_request(service_id):
         error = _validate_request_form()
         if error:
             flash(error, "danger")
-            return redirect(request.url)
+            return _render_new_request_form(service, form_data=request.form)
 
         tr = generate_tr_number()
         while TestRequest.query.filter_by(tr_number=tr).first():
@@ -92,6 +92,16 @@ def new_request(service_id):
         flash(f"Request {test_request.tr_number} submitted successfully.", "success")
         return redirect(url_for("client.dashboard"))
 
+    return _render_new_request_form(service)
+
+
+def _render_new_request_form(service, form_data=None):
+    total_groups = 1
+    if form_data:
+        try:
+            total_groups = max(1, min(10, int(form_data.get("num_groups", 1))))
+        except (TypeError, ValueError):
+            total_groups = 1
     return render_template(
         "client/new_request.html",
         service=service,
@@ -101,6 +111,8 @@ def new_request(service_id):
         location_choices=LOCATION_CHOICES,
         valve_types=VALVE_TYPES,
         today=date.today().isoformat(),
+        form_data=form_data,
+        total_groups=total_groups,
     )
 
 
@@ -180,9 +192,6 @@ def edit_request(request_id):
 
     if request.method == "POST":
         error = _validate_request_form()
-        if error:
-            flash(error, "danger")
-            return redirect(request.url)
 
         need_by_str = request.form.get("need_by_date", "").strip()
         need_by_date = None
@@ -190,9 +199,10 @@ def edit_request(request_id):
             try:
                 need_by_date = date.fromisoformat(need_by_str)
             except ValueError:
-                flash("Invalid 'Need By Date' format.", "danger")
-                return redirect(request.url)
+                error = error or "Invalid 'Need By Date' format."
 
+        # Reflect submitted values on the in-memory object so a validation error never
+        # loses what the client typed — nothing is committed unless validation passes.
         req.priority = request.form.get("priority")
         req.need_by_date = need_by_date
         req.location = request.form.get("location") or None
@@ -209,6 +219,11 @@ def edit_request(request_id):
         req.previous_tr_numbers = request.form.get("previous_tr_numbers", "").strip() or None
         req.test_purpose = request.form.get("test_purpose", "").strip() or None
         req.additional_instructions = request.form.get("additional_instructions", "").strip() or None
+
+        if error:
+            flash(error, "danger")
+            return _render_edit_request_form(req, form_data=request.form)
+
         req.total_groups = max(1, min(10, int(request.form.get("num_groups", 1))))
 
         for pg in req.part_groups.all():
@@ -223,7 +238,18 @@ def edit_request(request_id):
         flash(f"Request {req.tr_number} updated and resubmitted.", "success")
         return redirect(url_for("client.dashboard"))
 
-    part_groups = req.part_groups.all()
+    return _render_edit_request_form(req)
+
+
+def _render_edit_request_form(req, form_data=None):
+    if form_data:
+        try:
+            total_groups = max(1, min(10, int(form_data.get("num_groups", 1))))
+        except (TypeError, ValueError):
+            total_groups = 1
+        part_groups = [_FormPartGroupView(GROUP_LETTERS[i]) for i in range(total_groups)]
+    else:
+        part_groups = req.part_groups.all()
     return render_template(
         "client/edit_request.html",
         req=req,
@@ -235,6 +261,46 @@ def edit_request(request_id):
         valve_types=VALVE_TYPES,
         today=date.today().isoformat(),
     )
+
+
+class _FormPartGroupView:
+    """Adapts posted 'group_<letter>_*' fields to look like a PartGroup ORM object,
+    so error re-display can reuse the same template/macro used for real PartGroup rows."""
+
+    def __init__(self, letter):
+        prefix = f"group_{letter}_"
+        f = request.form
+        self.group_letter = letter
+        self.location = f.get(prefix + "location") or None
+        self.valve_type = f.get(prefix + "valve_type", "").strip() or None
+        self.valve_type_other = f.get(prefix + "valve_type_other", "").strip() or None
+        self.part_number = f.get(prefix + "part_number", "").strip() or None
+        self.group_id = f.get(prefix + "group_id", "").strip() or None
+        self.quantity = _safe_int(f.get(prefix + "quantity"))
+        self.group_type = f.get(prefix + "group_type") or None
+        self.manufacturing_process = f.get(prefix + "manufacturing_process") or None
+        self.manufacturing_process_other = f.get(prefix + "manufacturing_process_other", "").strip() or None
+        inspected_val = f.get(prefix + "inspected")
+        self.inspected = True if inspected_val == "yes" else (False if inspected_val == "no" else None)
+        self.part_type = f.get(prefix + "part_type", "").strip() or None
+        self.vl_part_number = f.get(prefix + "vl_part_number", "").strip() or None
+        self.va_number = f.get(prefix + "va_number", "").strip() or None
+        self.x_number = f.get(prefix + "x_number", "").strip() or None
+        self.material_lab_code = f.get(prefix + "material_lab_code", "").strip() or None
+        self.material_prod_code = f.get(prefix + "material_prod_code", "").strip() or None
+        self.batch_no = f.get(prefix + "batch_no", "").strip() or None
+        self.alternate_batch_no = f.get(prefix + "alternate_batch_no", "").strip() or None
+        self.production_location = f.get(prefix + "production_location", "").strip() or None
+        mold_date_str = f.get(prefix + "mold_date", "").strip()
+        self.mold_date = None
+        if mold_date_str:
+            try:
+                self.mold_date = date.fromisoformat(mold_date_str)
+            except ValueError:
+                pass
+        self.post_cure = f.get(prefix + "post_cure", "").strip() or None
+        self.mold_tool_number = f.get(prefix + "mold_tool_number", "").strip() or None
+        self.other_description = f.get(prefix + "other_description", "").strip() or None
 
 
 @bp.route("/request/<int:request_id>/resubmit", methods=["POST"])
@@ -264,8 +330,9 @@ def _validate_request_form():
             return "At least one part group is required."
     except ValueError:
         return "Invalid number of groups."
-    if not request.form.get("group_A_quantity", "").strip():
-        return "Please enter the quantity for Group A."
+    for letter in GROUP_LETTERS[:max(1, min(10, num))]:
+        if not request.form.get(f"group_{letter}_quantity", "").strip():
+            return f"Please enter the quantity for Group {letter}."
     return None
 
 
