@@ -39,6 +39,11 @@ Login is by **email**, not username.
 | Client   | `admin@vernay.com`    | `admin`    |
 | Engineer | `test_eng@vernay.com` | `test_eng` |
 
+## Managing accounts (CLI only — no admin UI)
+
+- Add an engineer: `python3.10 create_engineer.py` — prompts for name/email/services, emails a temp password.
+- Delete an account: `python3.10 delete_user.py` — lists all accounts, refuses to delete one with linked requests/comments (would leave orphaned FK references since SQLite FK enforcement isn't enabled) unless run with `--force`.
+
 ## Architecture
 
 Flask application using the **app factory pattern** (`create_app()` in `app/__init__.py`).
