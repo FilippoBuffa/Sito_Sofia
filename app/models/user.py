@@ -99,6 +99,9 @@ class TestService(db.Model):
     name = db.Column(db.String(64), unique=True, nullable=False)
     description = db.Column(db.String(256), nullable=True)
     active = db.Column(db.Boolean, default=True, nullable=False)
+    # Shown in the catalog but greyed out / not clickable when False (service exists,
+    # but isn't taking new requests right now). Distinct from `active`, which hides it entirely.
+    accepting_requests = db.Column(db.Boolean, default=True, nullable=False)
 
     requests = db.relationship("TestRequest", backref="service", lazy="dynamic")
 

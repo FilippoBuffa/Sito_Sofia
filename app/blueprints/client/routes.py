@@ -69,6 +69,9 @@ def test_catalog():
 @require_client
 def new_request(service_id):
     service = TestService.query.get_or_404(service_id)
+    if not service.accepting_requests:
+        flash(f"{service.name} is not currently accepting new requests.", "warning")
+        return redirect(url_for("client.test_catalog"))
 
     if request.method == "POST":
         error = _validate_request_form()

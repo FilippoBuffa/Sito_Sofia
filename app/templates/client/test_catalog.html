@@ -10,6 +10,7 @@
 <div class="row g-3">
   {% for service in services %}
   <div class="col-12 col-md-6 col-lg-4">
+    {% if service.accepting_requests %}
     <a href="{{ url_for('client.new_request', service_id=service.id) }}" class="text-decoration-none">
       <div class="service-card p-4 h-100">
         <div class="service-icon mb-3">
@@ -27,6 +28,25 @@
         {% endif %}
       </div>
     </a>
+    {% else %}
+    <div class="service-card p-4 h-100" style="opacity:0.55; filter:grayscale(100%); cursor:not-allowed;"
+         title="Not accepting new requests right now">
+      <div class="service-icon mb-3">
+        {% if 'air' in service.name.lower() %}
+          <i class="bi bi-wind"></i>
+        {% elif 'water' in service.name.lower() %}
+          <i class="bi bi-droplet"></i>
+        {% else %}
+          <i class="bi bi-clipboard-check"></i>
+        {% endif %}
+      </div>
+      <h5 class="fw-bold text-muted">{{ service.name }}</h5>
+      {% if service.description %}
+        <p class="text-muted mb-0" style="font-size:0.9rem;">{{ service.description }}</p>
+      {% endif %}
+      <span class="badge bg-secondary mt-2">Temporarily unavailable</span>
+    </div>
+    {% endif %}
   </div>
   {% else %}
   <div class="col-12">
