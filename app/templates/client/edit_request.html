@@ -112,7 +112,9 @@
         <select name="fluid" class="form-select">
           <option value="" disabled>Select fluid…</option>
           <option value="air" {% if req.fluid == 'air' %}selected{% endif %}>Air</option>
-          <option value="water" {% if req.fluid == 'water' %}selected{% endif %}>Water</option>
+          <option value="water" {% if water_disabled %}disabled{% endif %} {% if req.fluid == 'water' %}selected{% endif %}>
+            Water{% if water_disabled %} (temporarily unavailable){% endif %}
+          </option>
         </select>
       </div>
 

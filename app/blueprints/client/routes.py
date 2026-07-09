@@ -98,6 +98,15 @@ def new_request(service_id):
     return _render_new_request_form(service)
 
 
+def _fluid_disabled(fluid_value):
+    """A fluid option is unavailable if the TestService matching its name isn't accepting requests."""
+    service_name = {"water": "Water Flow Test", "air": "Air Flow Test"}.get(fluid_value)
+    if not service_name:
+        return False
+    service = TestService.query.filter_by(name=service_name).first()
+    return bool(service and not service.accepting_requests)
+
+
 def _render_new_request_form(service, form_data=None):
     total_groups = 1
     if form_data:
@@ -116,6 +125,7 @@ def _render_new_request_form(service, form_data=None):
         today=date.today().isoformat(),
         form_data=form_data,
         total_groups=total_groups,
+        water_disabled=_fluid_disabled("water"),
     )
 
 
@@ -263,6 +273,7 @@ def _render_edit_request_form(req, form_data=None):
         location_choices=LOCATION_CHOICES,
         valve_types=VALVE_TYPES,
         today=date.today().isoformat(),
+        water_disabled=_fluid_disabled("water"),
     )
 
 
@@ -327,6 +338,9 @@ def resubmit(request_id):
 def _validate_request_form():
     if request.form.get("priority", "").strip() not in ("high", "medium", "low"):
         return "Please select a priority before submitting."
+    fluid = request.form.get("fluid", "").strip()
+    if fluid and _fluid_disabled(fluid):
+        return f"{fluid.capitalize()} testing is temporarily unavailable — please select a different fluid."
     try:
         num = int(request.form.get("num_groups", 1))
         if num < 1:

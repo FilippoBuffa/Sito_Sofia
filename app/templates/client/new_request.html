@@ -156,7 +156,10 @@
         <select name="fluid" class="form-select">
           <option value="" disabled {{ 'selected' if not (form_data and form_data.get('fluid')) else '' }}>Select fluid…</option>
           <option value="air" {{ 'selected' if form_data and form_data.get('fluid') == 'air' else '' }}>Air</option>
-          <option value="water" {{ 'selected' if form_data and form_data.get('fluid') == 'water' else '' }}>Water</option>
+          <option value="water" {{ 'disabled' if water_disabled else '' }}
+                  {{ 'selected' if form_data and form_data.get('fluid') == 'water' else '' }}>
+            Water{{ ' (temporarily unavailable)' if water_disabled else '' }}
+          </option>
         </select>
       </div>
 
