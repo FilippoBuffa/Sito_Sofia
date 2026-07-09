@@ -11,40 +11,34 @@
   <span class="badge badge-{{ req.priority }}">{{ req.priority_label }}</span>
 
   {# ── Quick actions ── #}
-  {% if req.status == 'submitted' %}
-    <div class="ms-auto d-flex gap-2">
-      <form method="POST" action="{{ url_for('engineer.accept', request_id=req.id) }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-        <button type="submit" class="btn btn-primary-vernay">
-          <i class="bi bi-check-lg me-1"></i> Accept — Notify Client to Ship
-        </button>
-      </form>
+  <div class="ms-auto d-flex gap-2 flex-wrap">
+    {% if req.status == 'submitted' %}
+      <button class="btn btn-primary-vernay" data-bs-toggle="modal" data-bs-target="#acceptModal">
+        <i class="bi bi-check-lg me-1"></i> Accept — Notify Client to Ship
+      </button>
       <button class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#returnModal">
         <i class="bi bi-arrow-return-left me-1"></i> Return
       </button>
-    </div>
-  {% elif req.status == 'awaiting_parts' %}
-    <div class="ms-auto d-flex gap-2">
+    {% elif req.status == 'awaiting_parts' %}
       <button class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#returnModal">
         <i class="bi bi-arrow-return-left me-1"></i> Return
       </button>
-    </div>
-  {% elif req.status == 'parts_shipped' %}
-    <div class="ms-auto d-flex gap-2">
+    {% elif req.status == 'parts_shipped' %}
       <button class="btn btn-primary-vernay" data-bs-toggle="modal" data-bs-target="#partsReceivedModal">
         <i class="bi bi-box-arrow-in-down me-1"></i> Parts Received
       </button>
-    </div>
-  {% elif req.status == 'in_progress' %}
-    <div class="ms-auto d-flex gap-2">
+    {% elif req.status == 'in_progress' %}
       <button class="btn btn-accent" data-bs-toggle="modal" data-bs-target="#closeModal">
         <i class="bi bi-upload me-1"></i> Upload Results & Close
       </button>
       <button class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#returnModal">
         <i class="bi bi-arrow-return-left me-1"></i> Return
       </button>
-    </div>
-  {% endif %}
+    {% endif %}
+    <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+      <i class="bi bi-trash me-1"></i> Delete
+    </button>
+  </div>
 </div>
 
 <div class="row g-4">
@@ -233,6 +227,64 @@
     </div>
   </div>
 
+</div>
+
+{# ── Accept Modal ── #}
+{% if req.status == 'submitted' %}
+<div class="modal fade" id="acceptModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="{{ url_for('engineer.accept', request_id=req.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <div class="modal-header" style="background:var(--teal); color:white;">
+          <h5 class="modal-title"><i class="bi bi-check-lg me-2"></i>Accept Request</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p>The client will be notified to ship their parts. Set the TR number for this request — you can keep the auto-generated one or use your own lab numbering.</p>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">TR Number</label>
+            <input type="text" name="tr_number" class="form-control" required maxlength="20"
+                   value="{{ req.tr_number }}" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary-vernay">
+            <i class="bi bi-check-lg me-1"></i> Accept & Notify Client
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{# ── Delete Modal ── #}
+<div class="modal fade" id="deleteModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="{{ url_for('engineer.delete_request', request_id=req.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <div class="modal-header" style="background:var(--orange); color:white;">
+          <h5 class="modal-title"><i class="bi bi-trash me-2"></i>Delete Request</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to permanently delete <strong>{{ req.tr_number }}</strong>?</p>
+          <p class="text-danger" style="font-size:0.9rem;">
+            This cannot be undone. All comments, attachments{% if req.result_file_path %}, and the uploaded result file{% endif %} will be permanently removed.
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-danger">
+            <i class="bi bi-trash me-1"></i> Permanently Delete
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>
 
 {# ── Return Modal ── #}

@@ -133,6 +133,15 @@ def accept(request_id):
         flash(f"Request {req.tr_number} is no longer in Submitted status.", "warning")
         return redirect(url_for("engineer.dashboard"))
 
+    new_tr = request.form.get("tr_number", "").strip()
+    if not new_tr:
+        flash("Please provide a TR number.", "warning")
+        return redirect(url_for("engineer.request_detail", request_id=request_id))
+    if new_tr != req.tr_number and TestRequest.query.filter_by(tr_number=new_tr).first():
+        flash(f"TR number '{new_tr}' is already in use by another request.", "danger")
+        return redirect(url_for("engineer.request_detail", request_id=request_id))
+
+    req.tr_number = new_tr
     req.status = "awaiting_parts"
     req.assigned_engineer_id = current_user.id
     db.session.commit()
@@ -238,6 +247,33 @@ def close_request(request_id):
     send_request_closed(req)
     flash(f"Request {req.tr_number} closed successfully.", "success")
     return redirect(url_for("engineer.dashboard"))
+
+
+@bp.route("/request/<int:request_id>/delete", methods=["POST"])
+@login_required
+@require_engineer
+def delete_request(request_id):
+    req = TestRequest.query.get_or_404(request_id)
+    if req.service_id not in _engineer_service_ids():
+        abort(403)
+
+    tr_number = req.tr_number
+    _delete_request_files(req)
+    db.session.delete(req)
+    db.session.commit()
+    flash(f"Request {tr_number} permanently deleted.", "success")
+    return redirect(url_for("engineer.dashboard"))
+
+
+def _delete_request_files(req):
+    if req.result_file_path:
+        path = os.path.join(current_app.config["UPLOAD_FOLDER"], req.result_file_path)
+        if os.path.exists(path):
+            os.remove(path)
+    for att in req.attachments.all():
+        path = os.path.join(current_app.config["ATTACHMENT_FOLDER"], att.filename)
+        if os.path.exists(path):
+            os.remove(path)
 
 
 @bp.route("/download/<int:request_id>")

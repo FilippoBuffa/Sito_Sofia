@@ -5,10 +5,9 @@ import string
 
 
 def generate_tr_number():
-    """Generate a unique TR# like TR-2024-XXXXX."""
-    year = datetime.now(timezone.utc).year
+    """Generate a unique provisional TR# like TR-12345. The engineer renames it on accept."""
     suffix = "".join(random.choices(string.digits, k=5))
-    return f"TR-{year}-{suffix}"
+    return f"TR-{suffix}"
 
 
 class TestRequest(db.Model):

@@ -337,6 +337,33 @@ def resubmit(request_id):
     return redirect(url_for("client.dashboard"))
 
 
+@bp.route("/request/<int:request_id>/delete", methods=["POST"])
+@login_required
+@require_client
+def delete_request(request_id):
+    req = TestRequest.query.get_or_404(request_id)
+    if req.requester_id != current_user.id:
+        abort(403)
+
+    tr_number = req.tr_number
+    _delete_request_files(req)
+    db.session.delete(req)
+    db.session.commit()
+    flash(f"Request {tr_number} permanently deleted.", "success")
+    return redirect(url_for("client.dashboard"))
+
+
+def _delete_request_files(req):
+    if req.result_file_path:
+        path = os.path.join(current_app.config["UPLOAD_FOLDER"], req.result_file_path)
+        if os.path.exists(path):
+            os.remove(path)
+    for att in req.attachments.all():
+        path = os.path.join(current_app.config["ATTACHMENT_FOLDER"], att.filename)
+        if os.path.exists(path):
+            os.remove(path)
+
+
 def _validate_request_form():
     if request.form.get("priority", "").strip() not in ("high", "medium", "low"):
         return "Please select a priority before submitting."
