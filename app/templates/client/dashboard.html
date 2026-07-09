@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Vernay TestLab{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="page-title mb-0"><i class="bi bi-grid-1x2 me-2"></i>My Requests</h4>
+  <a href="{{ url_for('client.test_catalog') }}" class="btn btn-accent">
+    <i class="bi bi-plus-lg me-1"></i> New Request
+  </a>
+</div>
+
+<div class="row g-4">
+
+  {# ── Submitted ── #}
+  <div class="col-12 col-lg-6">
+    <div class="section-header submitted">
+      <i class="bi bi-send"></i> Submitted
+      <span class="badge bg-white text-dark ms-auto">{{ submitted|length }}</span>
+    </div>
+    <div class="request-card">
+      {% if submitted %}
+        {% for req in submitted %}
+          {{ _request_row(req) }}
+        {% endfor %}
+      {% else %}
+        <p class="empty-state"><i class="bi bi-inbox me-1"></i>No submitted requests.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  {# ── Returned ── #}
+  <div class="col-12 col-lg-6">
+    <div class="section-header returned">
+      <i class="bi bi-arrow-return-left"></i> Returned for Changes
+      <span class="badge bg-white text-dark ms-auto">{{ returned|length }}</span>
+    </div>
+    <div class="request-card">
+      {% if returned %}
+        {% for req in returned %}
+          {{ _request_row(req) }}
+        {% endfor %}
+      {% else %}
+        <p class="empty-state"><i class="bi bi-check-circle me-1"></i>No returned requests.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  {# ── Awaiting Parts / Parts Shipped ── #}
+  <div class="col-12 col-lg-6">
+    <div class="section-header awaiting_parts">
+      <i class="bi bi-box-arrow-up-right"></i> Awaiting Shipment / In Transit
+      <span class="badge bg-white text-dark ms-auto">{{ awaiting|length }}</span>
+    </div>
+    <div class="request-card">
+      {% if awaiting %}
+        {% for req in awaiting %}
+          {{ _request_row(req) }}
+        {% endfor %}
+      {% else %}
+        <p class="empty-state"><i class="bi bi-box me-1"></i>No requests awaiting shipment.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  {# ── In Progress ── #}
+  <div class="col-12 col-lg-6">
+    <div class="section-header in_progress">
+      <i class="bi bi-hourglass-split"></i> In Progress
+      <span class="badge bg-white text-dark ms-auto">{{ in_progress|length }}</span>
+    </div>
+    <div class="request-card">
+      {% if in_progress %}
+        {% for req in in_progress %}
+          {{ _request_row(req) }}
+        {% endfor %}
+      {% else %}
+        <p class="empty-state"><i class="bi bi-clock me-1"></i>No requests in progress.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  {# ── Closed ── #}
+  <div class="col-12">
+    <div class="section-header closed">
+      <i class="bi bi-archive"></i> Closed
+      <span class="badge bg-white text-dark ms-auto">{{ closed|length }}</span>
+    </div>
+    <div class="request-card">
+      {% if closed %}
+        {% for req in closed %}
+          {{ _request_row(req) }}
+        {% endfor %}
+      {% else %}
+        <p class="empty-state"><i class="bi bi-archive me-1"></i>No closed requests.</p>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% macro _request_row(req) %}
+<div class="card-body border-bottom d-flex justify-content-between align-items-center py-2 px-3">
+  <div>
+    <span class="tr-number">{{ req.tr_number }}</span>
+    <span class="ms-2 text-muted" style="font-size:0.82rem;">{{ req.service.name }}</span>
+    <span class="badge badge-{{ req.status }} ms-2" style="font-size:0.7rem;">{{ req.status_label }}</span>
+    <br/>
+    <small class="text-muted">{{ req.date_submitted.strftime('%d %b %Y') }}</small>
+    <span class="badge badge-{{ req.priority }} ms-2" style="font-size:0.7rem;">{{ req.priority_label }}</span>
+  </div>
+  <div class="d-flex align-items-center gap-2">
+    {% if req.status == 'awaiting_parts' %}
+      <a href="{{ url_for('client.shipping_sheet', request_id=req.id) }}"
+         class="btn btn-sm btn-outline-secondary" title="Print Shipping Sheet" target="_blank">
+        <i class="bi bi-printer"></i>
+      </a>
+    {% endif %}
+    {% if req.status == 'closed' and req.can_be_downloaded and req.result_file_path %}
+      <a href="{{ url_for('engineer.download_result', request_id=req.id) }}"
+         class="btn btn-sm btn-outline-secondary" title="Download result">
+        <i class="bi bi-download"></i>
+      </a>
+    {% endif %}
+    <a href="{{ url_for('client.request_detail', request_id=req.id) }}"
+       class="btn btn-sm btn-primary-vernay">View</a>
+  </div>
+</div>
+{% endmacro %}

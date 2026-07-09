@@ -1,0 +1,737 @@
+{% extends "base.html" %}
+{% block title %}New Request — {{ service.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center gap-3 mb-4">
+  <a href="{{ url_for('client.test_catalog') }}" class="btn btn-sm btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i>
+  </a>
+  <h4 class="page-title mb-0">New Request — {{ service.name }}</h4>
+</div>
+
+<form method="POST" id="requestForm" novalidate enctype="multipart/form-data">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+  {# ══ TEST INFO ══ #}
+  <div class="form-section">
+    <div class="form-section-title"><i class="bi bi-info-circle me-2"></i>Test Information</div>
+
+    <div class="row g-3">
+
+      <div class="col-12 col-md-6">
+        <label class="form-label fw-semibold">
+          Requested By
+          <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip"
+             title="Name of the requestor submitting this test request."></i>
+        </label>
+        <input type="text" class="form-control" value="{{ current_user.display_name }}" disabled />
+      </div>
+
+      <div class="col-12 col-md-3">
+        <label class="form-label fw-semibold">
+          Date
+          <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip"
+             title="Date of this request (auto-filled)."></i>
+        </label>
+        <input type="date" class="form-control" value="{{ today }}" disabled />
+      </div>
+
+      <div class="col-12 col-md-3">
+        <label class="form-label fw-semibold">
+          Need By Date
+          <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip"
+             title="Enter a date if the report is needed by a specific time. Leave blank if no deadline."></i>
+        </label>
+        <input type="date" name="need_by_date" class="form-control" min="{{ today }}" />
+      </div>
+
+      <div class="col-12 col-md-4">
+        <label class="form-label fw-semibold">
+          Priority
+          <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip"
+             title="High = Existing Customer Request/Complaint | Medium = Potential Customer Request | Low = Internal Development/Other"></i>
+        </label>
+        <select name="priority" class="form-select" required>
+          <option value="" disabled selected>Select priority…</option>
+          <option value="high">High — Customer Request/Complaint</option>
+          <option value="medium">Medium — Potential Customer Request</option>
+          <option value="low">Low — Internal Development/Other</option>
+        </select>
+      </div>
+
+      <div class="col-12 col-md-4">
+        <label class="form-label fw-semibold">
+          Location
+          <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip"
+             title="Select the Vernay location or External Customer."></i>
+        </label>
+        <select name="location" id="ti_location" class="form-select"
+                onchange="inheritField('location', this.value)">
+          <option value="">— Select location —</option>
+          {% for val, label in location_choices %}
+            <option value="{{ val }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-12 col-md-4">
+        <label class="form-label fw-semibold">
+          Department
+          <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip"
+             title="Department submitting the request."></i>
+        </label>
+        <input type="text" name="department" id="ti_department" class="form-control"
+               maxlength="128" placeholder="e.g. R&D, Quality"
+               oninput="inheritField('department', this.value)" />
+      </div>
+
+      <div class="col-12 col-md-4">
+        <label class="form-label fw-semibold">
+          Project
+          <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip"
+             title="Project name or number (optional)."></i>
+        </label>
+        <input type="text" name="project" class="form-control"
+               maxlength="128" placeholder="e.g. Project Alpha (optional)" />
+      </div>
+
+      <div class="col-12 col-md-4">
+        <label class="form-label fw-semibold">
+          Valve Type
+          <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip"
+             title="Select or type the valve type. Choose 'Other' to describe a custom type."></i>
+        </label>
+        <input type="text" name="valve_type" id="ti_valve_type" class="form-control"
+               list="valveTypeList" maxlength="128" placeholder="Type or select…"
+               oninput="inheritField('valve_type', this.value)"
+               onchange="toggleValveOther('ti', this.value)" />
+        <datalist id="valveTypeList">
+          {% for vt in valve_types %}
+            <option value="{{ vt }}">
+          {% endfor %}
+        </datalist>
+      </div>
+
+      <div class="col-12 col-md-4" id="ti_valve_other_wrap" style="display:none;">
+        <label class="form-label fw-semibold">Describe Valve Type</label>
+        <input type="text" name="valve_type_other" id="ti_valve_type_other" class="form-control"
+               maxlength="128" placeholder="Describe the valve type…"
+               oninput="inheritField('valve_type_other', this.value)" />
+      </div>
+
+      <div class="col-12 col-md-4">
+        <label class="form-label fw-semibold">
+          Part Number
+          <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip"
+             title="Customer or internal part number (optional)."></i>
+        </label>
+        <input type="text" name="part_number" id="ti_part_number" class="form-control"
+               maxlength="128" placeholder="e.g. VL-12345"
+               oninput="inheritField('part_number', this.value)" />
+      </div>
+
+      <div class="col-12 col-md-4">
+        <label class="form-label fw-semibold">
+          Test Type
+          <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip"
+             title="Standard test method for characterizing checkvalve function."></i>
+        </label>
+        <input type="text" class="form-control bg-light" value="Checkvalve Performance" disabled />
+        <input type="hidden" name="test_type" value="Checkvalve Performance" />
+      </div>
+
+      <div class="col-12 col-md-4">
+        <label class="form-label fw-semibold">
+          Fluid
+          <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip"
+             title="Air testing is mostly used to characterize function (more sensitive). Specify water if the application uses liquid."></i>
+        </label>
+        <select name="fluid" class="form-select">
+          <option value="" disabled selected>Select fluid…</option>
+          <option value="air">Air</option>
+          <option value="water">Water</option>
+        </select>
+      </div>
+
+      <div class="col-12 col-md-4">
+        <label class="form-label fw-semibold">
+          Maximum Forward Test Pressure
+          <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip"
+             title="If purpose is to develop baseline, parts will be tested to the maximum recommended forward pressure. If for a specific application, specify the maximum forward pressure for that application."></i>
+        </label>
+        <input type="text" name="max_forward_pressure" class="form-control"
+               placeholder="e.g. 4200 mbar" maxlength="64" />
+      </div>
+
+      <div class="col-12 col-md-4">
+        <label class="form-label fw-semibold">
+          Report Type
+          <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip"
+             title="Data Only: raw data sheet. Custom: full formatted report with additional analysis."></i>
+        </label>
+        <div class="d-flex gap-3 pt-2">
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="report_type"
+                   id="rt_data" value="data_only" />
+            <label class="form-check-label" for="rt_data">Data Only</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="report_type"
+                   id="rt_custom" value="custom" />
+            <label class="form-check-label" for="rt_custom">Custom</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <label class="form-label fw-semibold">
+          Report Notes
+          <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip"
+             title="Any specific notes or requirements for the report."></i>
+        </label>
+        <textarea name="report_notes" class="form-control" rows="2"
+                  placeholder="Optional notes for the report…" maxlength="1000"></textarea>
+      </div>
+
+      <div class="col-12 col-md-3">
+        <label class="form-label fw-semibold">
+          Previously Tested?
+          <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip"
+             title="Has this part number been tested before? Check the test index for cross-reference."></i>
+        </label>
+        <div class="d-flex gap-3 pt-2">
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="previously_tested"
+                   id="prev_yes" value="yes" onchange="togglePrevTR(true)" />
+            <label class="form-check-label" for="prev_yes">Yes</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="previously_tested"
+                   id="prev_no" value="no" checked onchange="togglePrevTR(false)" />
+            <label class="form-check-label" for="prev_no">No</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-3" id="prevTRField" style="display:none;">
+        <label class="form-label fw-semibold">
+          Previous TR Number(s)
+          <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip"
+             title="Enter previous test request numbers if applicable."></i>
+        </label>
+        <input type="text" name="previous_tr_numbers" class="form-control"
+               placeholder="e.g. TR-2023-00123" maxlength="256" />
+      </div>
+
+      <div class="col-12">
+        <label class="form-label fw-semibold">
+          Test Purpose
+          <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip"
+             title="Describe the purpose for testing. Examples: 1) Develop baseline data, 2) Determine if parts meet spec, 3) Compare to existing data, 4) Compare experimental vs control."></i>
+        </label>
+        <textarea name="test_purpose" class="form-control" rows="3"
+                  placeholder="Describe the purpose of this test request…" maxlength="2000"></textarea>
+      </div>
+
+      <div class="col-12">
+        <label class="form-label fw-semibold">
+          Additional Test Instructions
+          <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip"
+             title="Provide any additional information or instructions about the test, if necessary."></i>
+        </label>
+        <textarea name="additional_instructions" class="form-control" rows="2"
+                  placeholder="Any additional instructions…" maxlength="2000"></textarea>
+      </div>
+
+    </div>
+  </div>
+
+  {# ══ ATTACHMENTS ══ #}
+  <div class="form-section">
+    <div class="form-section-title"><i class="bi bi-paperclip me-2"></i>Attachments (optional)</div>
+    <p class="text-muted" style="font-size:0.88rem;">
+      Attach up to 3 files (any format, max 10 MB each). These will be visible to the lab engineer.
+    </p>
+    <div class="row g-2">
+      <div class="col-12 col-md-4">
+        <input type="file" name="attachments" class="form-control" />
+      </div>
+      <div class="col-12 col-md-4">
+        <input type="file" name="attachments" class="form-control" />
+      </div>
+      <div class="col-12 col-md-4">
+        <input type="file" name="attachments" class="form-control" />
+      </div>
+    </div>
+  </div>
+
+  {# ══ PART GROUPS ══ #}
+  <div class="form-section">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div class="form-section-title mb-0">
+        <i class="bi bi-boxes me-2"></i>Part Groups
+      </div>
+      <span class="text-muted" style="font-size:0.85rem;">
+        <span id="groupCount">1</span> / 10 groups
+      </span>
+    </div>
+
+    <input type="hidden" name="num_groups" id="numGroups" value="1" />
+
+    <div id="partGroupsContainer">
+      {{ _part_group_form('A', 0) }}
+    </div>
+
+    <button type="button" class="add-group-btn mt-2" id="addGroupBtn" onclick="addGroup()">
+      <i class="bi bi-plus-circle me-1"></i> Add Part Group
+    </button>
+  </div>
+
+  <div class="d-flex justify-content-end gap-2 mb-5">
+    <a href="{{ url_for('client.test_catalog') }}" class="btn btn-outline-secondary">Cancel</a>
+    <button type="submit" class="btn btn-primary-vernay px-4 fw-semibold">
+      <i class="bi bi-send me-1"></i> Submit Request
+    </button>
+  </div>
+
+</form>
+{% endblock %}
+
+{% macro _part_group_form(letter, index) %}
+<div class="part-group-section" id="group_{{ letter }}">
+  <div class="part-group-title">
+    <i class="bi bi-box-seam me-1"></i> Group {{ letter }}
+    {% if index > 0 %}
+      <button type="button" class="btn btn-sm btn-outline-danger float-end"
+              onclick="removeGroup('{{ letter }}')">
+        <i class="bi bi-trash"></i> Remove
+      </button>
+    {% endif %}
+  </div>
+  <div class="row g-3">
+
+    <div class="col-12 col-md-3">
+      <label class="form-label">Location</label>
+      <select name="group_{{ letter }}_location" class="form-select group-location">
+        <option value="">— inherit from Test Info —</option>
+        {% for val, label in location_choices %}
+          <option value="{{ val }}">{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-12 col-md-3">
+      <label class="form-label">Valve Type</label>
+      <input type="text" name="group_{{ letter }}_valve_type" class="form-control group-valve-type"
+             list="valveTypeList" maxlength="128" placeholder="inherit from Test Info"
+             onchange="toggleValveOther('{{ letter }}', this.value)" />
+    </div>
+
+    <div class="col-12 col-md-3" id="valve_other_{{ letter }}" style="display:none;">
+      <label class="form-label">Describe Valve Type</label>
+      <input type="text" name="group_{{ letter }}_valve_type_other" class="form-control" maxlength="128" />
+    </div>
+
+    <div class="col-12 col-md-3">
+      <label class="form-label">Part Number</label>
+      <input type="text" name="group_{{ letter }}_part_number" class="form-control group-part-number"
+             maxlength="128" placeholder="inherit from Test Info" />
+    </div>
+
+    <div class="col-12 col-md-4">
+      <label class="form-label">
+        Group ID
+        <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip"
+           title="Identification for this group of parts. Label the parts before sending. If left blank, the testlab will assign one."></i>
+      </label>
+      <input type="text" name="group_{{ letter }}_group_id" class="form-control"
+             placeholder="e.g. VL-12345 or Group A" maxlength="64" />
+    </div>
+
+    <div class="col-12 col-md-2">
+      <label class="form-label">
+        Quantity
+        <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip"
+           title="Minimum number of test samples in this group. 30 is standard for developing baseline data."></i>
+      </label>
+      <input type="number" name="group_{{ letter }}_quantity" class="form-control"
+             min="1" max="9999" placeholder="e.g. 30" />
+    </div>
+
+    <div class="col-12 col-md-3">
+      <label class="form-label">
+        Group Type
+        <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip"
+           title="If comparing experimental vs. control groups, specify which this group is."></i>
+      </label>
+      <select name="group_{{ letter }}_group_type" class="form-select">
+        {% for val, label in group_type_choices %}
+          <option value="{{ val }}">{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-12 col-md-3">
+      <label class="form-label">
+        Samples Inspected?
+        <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip"
+           title="Inspection status. Parts are not inspected by the testlab prior to testing."></i>
+      </label>
+      <select name="group_{{ letter }}_inspected" class="form-select">
+        <option value="">Unknown</option>
+        <option value="yes">Yes</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+
+    <div class="col-12">
+      <label class="form-label">
+        Manufacturing Process Type
+        <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip"
+           title="Select the manufacturing process that applies to this group of parts."></i>
+      </label>
+      <select name="group_{{ letter }}_manufacturing_process" class="form-select mfg-select"
+              onchange="toggleMfgOther(this, '{{ letter }}')">
+        <option value="" disabled selected>Select type…</option>
+        {% for val, label in manufacturing_process_choices %}
+          <option value="{{ val }}">{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-12" id="mfg_other_{{ letter }}" style="display:none;">
+      <label class="form-label">Describe Manufacturing Process</label>
+      <input type="text" name="group_{{ letter }}_manufacturing_process_other"
+             class="form-control" maxlength="256"
+             placeholder="Describe the manufacturing process…" />
+    </div>
+
+    <div class="col-12">
+      <div class="fw-semibold text-muted mb-2" style="font-size:0.85rem;">
+        <i class="bi bi-table me-1"></i> Test Group Summary Information
+        <span data-bs-toggle="tooltip"
+              title="This information will be copied directly to the summary data sheet in the report.">
+          <i class="bi bi-question-circle"></i>
+        </span>
+      </div>
+      <div class="row g-2">
+        <div class="col-12 col-md-4">
+          <label class="form-label">Part Type</label>
+          <input type="text" name="group_{{ letter }}_part_type" class="form-control" maxlength="128" />
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label">VL Part Number</label>
+          <input type="text" name="group_{{ letter }}_vl_part_number" class="form-control" maxlength="64" />
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label">VA Number</label>
+          <input type="text" name="group_{{ letter }}_va_number" class="form-control" maxlength="64" />
+        </div>
+        <div class="col-12 col-md-3">
+          <label class="form-label">X Number</label>
+          <input type="text" name="group_{{ letter }}_x_number" class="form-control" maxlength="64" />
+        </div>
+        <div class="col-12 col-md-3">
+          <label class="form-label">Material Lab Code</label>
+          <input type="text" name="group_{{ letter }}_material_lab_code" class="form-control" maxlength="64" />
+        </div>
+        <div class="col-12 col-md-3">
+          <label class="form-label">Material Prod. Code</label>
+          <input type="text" name="group_{{ letter }}_material_prod_code" class="form-control" maxlength="64" />
+        </div>
+        <div class="col-12 col-md-3">
+          <label class="form-label">Batch No</label>
+          <input type="text" name="group_{{ letter }}_batch_no" class="form-control" maxlength="64" />
+        </div>
+        <div class="col-12 col-md-3">
+          <label class="form-label">
+            Alternate Batch No
+            <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip"
+               title="Optional alternate batch number if applicable."></i>
+          </label>
+          <input type="text" name="group_{{ letter }}_alternate_batch_no" class="form-control" maxlength="64" />
+        </div>
+        <div class="col-12 col-md-3">
+          <label class="form-label">
+            Production Location
+            <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip"
+               title="Where the parts were produced."></i>
+          </label>
+          <input type="text" name="group_{{ letter }}_production_location" class="form-control" maxlength="128" />
+        </div>
+        <div class="col-12 col-md-3">
+          <label class="form-label">Mold Date</label>
+          <input type="date" name="group_{{ letter }}_mold_date" class="form-control" />
+        </div>
+        <div class="col-12 col-md-3">
+          <label class="form-label">
+            Post Cure (Time @ Temp)
+            <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip"
+               title="e.g. 4h @ 180°C"></i>
+          </label>
+          <input type="text" name="group_{{ letter }}_post_cure" class="form-control"
+                 maxlength="128" placeholder="e.g. 4h @ 180°C" />
+        </div>
+        <div class="col-12 col-md-3">
+          <label class="form-label">Mold T-# (Unit #)</label>
+          <input type="text" name="group_{{ letter }}_mold_tool_number" class="form-control" maxlength="64" />
+        </div>
+        <div class="col-12">
+          <label class="form-label">
+            Other Part Description
+            <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip"
+               title="Fill in any other pertinent information not covered above."></i>
+          </label>
+          <textarea name="group_{{ letter }}_other_description" class="form-control"
+                    rows="2" maxlength="1000"></textarea>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endmacro %}
+
+{% block scripts %}
+<script>
+const GROUP_LETTERS = {{ group_letters | tojson }};
+const LOCATION_CHOICES = {{ location_choices | tojson }};
+const VALVE_TYPES = {{ valve_types | tojson }};
+let currentGroups = 1;
+
+// ── Inheritance: Test Info → all groups ──────────────────────────
+function inheritField(field, value) {
+  document.querySelectorAll('.group-' + field.replace('_', '-')).forEach(el => {
+    if (el.value === '' || el.dataset.inherited === '1') {
+      el.value = value;
+      el.dataset.inherited = '1';
+    }
+  });
+  // Special: if inheriting valve_type, also update each group's "other" visibility
+  if (field === 'valve_type') {
+    document.querySelectorAll('#partGroupsContainer .part-group-section').forEach(sec => {
+      const letter = sec.id.replace('group_', '');
+      const inp = sec.querySelector('.group-valve-type');
+      if (inp && (inp.value === '' || inp.dataset.inherited === '1')) {
+        inp.value = value;
+        inp.dataset.inherited = '1';
+        toggleValveOther(letter, value);
+      }
+    });
+  }
+}
+
+function toggleValveOther(prefix, value) {
+  // prefix is 'ti' for test info or a letter for a group
+  const wrapId = prefix === 'ti' ? 'ti_valve_other_wrap' : 'valve_other_' + prefix;
+  const wrap = document.getElementById(wrapId);
+  if (wrap) wrap.style.display = (value.toLowerCase() === 'other') ? '' : 'none';
+}
+
+function addGroup() {
+  if (currentGroups >= 10) return;
+  const letter = GROUP_LETTERS[currentGroups];
+  currentGroups++;
+  document.getElementById('numGroups').value = currentGroups;
+  document.getElementById('groupCount').textContent = currentGroups;
+
+  const container = document.getElementById('partGroupsContainer');
+  const html = buildGroupHTML(letter, currentGroups - 1);
+  container.insertAdjacentHTML('beforeend', html);
+
+  // Pre-fill inherited values
+  const tiLocation = document.getElementById('ti_location').value;
+  const tiValveType = document.getElementById('ti_valve_type').value;
+  const tiValveOther = document.getElementById('ti_valve_type_other').value;
+  const tiPartNumber = document.getElementById('ti_part_number').value;
+
+  const newSection = document.getElementById('group_' + letter);
+  if (tiLocation) {
+    const sel = newSection.querySelector('.group-location');
+    if (sel) { sel.value = tiLocation; sel.dataset.inherited = '1'; }
+  }
+  if (tiValveType) {
+    const inp = newSection.querySelector('.group-valve-type');
+    if (inp) { inp.value = tiValveType; inp.dataset.inherited = '1'; toggleValveOther(letter, tiValveType); }
+  }
+  if (tiPartNumber) {
+    const inp = newSection.querySelector('.group-part-number');
+    if (inp) { inp.value = tiPartNumber; inp.dataset.inherited = '1'; }
+  }
+
+  container.querySelectorAll('[data-bs-toggle="tooltip"]:not([data-tooltip-init])').forEach(el => {
+    new bootstrap.Tooltip(el, { placement: 'top', trigger: 'hover focus' });
+    el.setAttribute('data-tooltip-init', '1');
+  });
+
+  if (currentGroups >= 10) document.getElementById('addGroupBtn').disabled = true;
+}
+
+function removeGroup(letter) {
+  const el = document.getElementById('group_' + letter);
+  if (el) el.remove();
+  currentGroups--;
+  document.getElementById('numGroups').value = currentGroups;
+  document.getElementById('groupCount').textContent = currentGroups;
+  document.getElementById('addGroupBtn').disabled = false;
+  renumberGroups();
+}
+
+function renumberGroups() {
+  const sections = document.querySelectorAll('#partGroupsContainer .part-group-section');
+  sections.forEach((section, idx) => {
+    const letter = GROUP_LETTERS[idx];
+    section.id = 'group_' + letter;
+    section.querySelectorAll('[name]').forEach(el => {
+      el.name = el.name.replace(/group_[A-J]_/, `group_${letter}_`);
+    });
+    section.querySelectorAll('[id]').forEach(el => {
+      el.id = el.id.replace(/[A-J](?=(_|$))/, letter);
+    });
+    const title = section.querySelector('.part-group-title');
+    if (title) {
+      title.innerHTML = `<i class="bi bi-box-seam me-1"></i> Group ${letter} `;
+      if (idx > 0) {
+        title.innerHTML += `<button type="button" class="btn btn-sm btn-outline-danger float-end"
+          onclick="removeGroup('${letter}')"><i class="bi bi-trash"></i> Remove</button>`;
+      }
+    }
+    section.querySelectorAll('.mfg-select').forEach(el => {
+      el.setAttribute('onchange', `toggleMfgOther(this, '${letter}')`);
+    });
+    section.querySelectorAll('[onchange*="toggleValveOther"]').forEach(el => {
+      el.setAttribute('onchange', `toggleValveOther('${letter}', this.value)`);
+    });
+    const mfgOther = section.querySelector('[id^="mfg_other_"]');
+    if (mfgOther) mfgOther.id = `mfg_other_${letter}`;
+    const valveOther = section.querySelector('[id^="valve_other_"]');
+    if (valveOther) valveOther.id = `valve_other_${letter}`;
+  });
+  currentGroups = sections.length;
+  document.getElementById('numGroups').value = currentGroups;
+  document.getElementById('groupCount').textContent = currentGroups;
+}
+
+function toggleMfgOther(select, letter) {
+  const otherDiv = document.getElementById('mfg_other_' + letter);
+  if (otherDiv) otherDiv.style.display = (select.value === 'other') ? '' : 'none';
+}
+
+function togglePrevTR(show) {
+  document.getElementById('prevTRField').style.display = show ? '' : 'none';
+}
+
+function buildGroupHTML(letter, index) {
+  const mfgOptions = {{ manufacturing_process_choices | tojson }}.map(
+    ([val, label]) => `<option value="${val}">${label}</option>`
+  ).join('');
+  const groupTypeOptions = {{ group_type_choices | tojson }}.map(
+    ([val, label]) => `<option value="${val}">${label}</option>`
+  ).join('');
+  const locationOptions = LOCATION_CHOICES.map(
+    ([val, label]) => `<option value="${val}">${label}</option>`
+  ).join('');
+
+  return `
+  <div class="part-group-section" id="group_${letter}">
+    <div class="part-group-title">
+      <i class="bi bi-box-seam me-1"></i> Group ${letter}
+      <button type="button" class="btn btn-sm btn-outline-danger float-end"
+              onclick="removeGroup('${letter}')">
+        <i class="bi bi-trash"></i> Remove
+      </button>
+    </div>
+    <div class="row g-3">
+      <div class="col-12 col-md-3">
+        <label class="form-label">Location</label>
+        <select name="group_${letter}_location" class="form-select group-location">
+          <option value="">— inherit from Test Info —</option>
+          ${locationOptions}
+        </select>
+      </div>
+      <div class="col-12 col-md-3">
+        <label class="form-label">Valve Type</label>
+        <input type="text" name="group_${letter}_valve_type" class="form-control group-valve-type"
+               list="valveTypeList" maxlength="128" placeholder="inherit from Test Info"
+               onchange="toggleValveOther('${letter}', this.value)" />
+      </div>
+      <div class="col-12 col-md-3" id="valve_other_${letter}" style="display:none;">
+        <label class="form-label">Describe Valve Type</label>
+        <input type="text" name="group_${letter}_valve_type_other" class="form-control" maxlength="128" />
+      </div>
+      <div class="col-12 col-md-3">
+        <label class="form-label">Part Number</label>
+        <input type="text" name="group_${letter}_part_number" class="form-control group-part-number"
+               maxlength="128" placeholder="inherit from Test Info" />
+      </div>
+      <div class="col-12 col-md-4">
+        <label class="form-label">Group ID</label>
+        <input type="text" name="group_${letter}_group_id" class="form-control" maxlength="64" />
+      </div>
+      <div class="col-12 col-md-2">
+        <label class="form-label">Quantity</label>
+        <input type="number" name="group_${letter}_quantity" class="form-control" min="1" max="9999" />
+      </div>
+      <div class="col-12 col-md-3">
+        <label class="form-label">Group Type</label>
+        <select name="group_${letter}_group_type" class="form-select">${groupTypeOptions}</select>
+      </div>
+      <div class="col-12 col-md-3">
+        <label class="form-label">Samples Inspected?</label>
+        <select name="group_${letter}_inspected" class="form-select">
+          <option value="">Unknown</option><option value="yes">Yes</option><option value="no">No</option>
+        </select>
+      </div>
+      <div class="col-12">
+        <label class="form-label">Manufacturing Process Type</label>
+        <select name="group_${letter}_manufacturing_process" class="form-select mfg-select"
+                onchange="toggleMfgOther(this, '${letter}')">
+          <option value="" disabled selected>Select type…</option>
+          ${mfgOptions}
+        </select>
+      </div>
+      <div class="col-12" id="mfg_other_${letter}" style="display:none;">
+        <label class="form-label">Describe Manufacturing Process</label>
+        <input type="text" name="group_${letter}_manufacturing_process_other"
+               class="form-control" maxlength="256" />
+      </div>
+      <div class="col-12">
+        <div class="fw-semibold text-muted mb-2" style="font-size:0.85rem;">
+          <i class="bi bi-table me-1"></i> Test Group Summary Information
+        </div>
+        <div class="row g-2">
+          <div class="col-12 col-md-4"><label class="form-label">Part Type</label>
+            <input type="text" name="group_${letter}_part_type" class="form-control" maxlength="128" /></div>
+          <div class="col-12 col-md-4"><label class="form-label">VL Part Number</label>
+            <input type="text" name="group_${letter}_vl_part_number" class="form-control" maxlength="64" /></div>
+          <div class="col-12 col-md-4"><label class="form-label">VA Number</label>
+            <input type="text" name="group_${letter}_va_number" class="form-control" maxlength="64" /></div>
+          <div class="col-12 col-md-3"><label class="form-label">X Number</label>
+            <input type="text" name="group_${letter}_x_number" class="form-control" maxlength="64" /></div>
+          <div class="col-12 col-md-3"><label class="form-label">Material Lab Code</label>
+            <input type="text" name="group_${letter}_material_lab_code" class="form-control" maxlength="64" /></div>
+          <div class="col-12 col-md-3"><label class="form-label">Material Prod. Code</label>
+            <input type="text" name="group_${letter}_material_prod_code" class="form-control" maxlength="64" /></div>
+          <div class="col-12 col-md-3"><label class="form-label">Batch No</label>
+            <input type="text" name="group_${letter}_batch_no" class="form-control" maxlength="64" /></div>
+          <div class="col-12 col-md-3"><label class="form-label">Alternate Batch No</label>
+            <input type="text" name="group_${letter}_alternate_batch_no" class="form-control" maxlength="64" /></div>
+          <div class="col-12 col-md-3"><label class="form-label">Production Location</label>
+            <input type="text" name="group_${letter}_production_location" class="form-control" maxlength="128" /></div>
+          <div class="col-12 col-md-3"><label class="form-label">Mold Date</label>
+            <input type="date" name="group_${letter}_mold_date" class="form-control" /></div>
+          <div class="col-12 col-md-3"><label class="form-label">Post Cure (Time @ Temp)</label>
+            <input type="text" name="group_${letter}_post_cure" class="form-control"
+                   maxlength="128" placeholder="e.g. 4h @ 180°C" /></div>
+          <div class="col-12 col-md-3"><label class="form-label">Mold T-# (Unit #)</label>
+            <input type="text" name="group_${letter}_mold_tool_number" class="form-control" maxlength="64" /></div>
+          <div class="col-12"><label class="form-label">Other Part Description</label>
+            <textarea name="group_${letter}_other_description" class="form-control"
+                      rows="2" maxlength="1000"></textarea></div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+</script>
+{% endblock %}

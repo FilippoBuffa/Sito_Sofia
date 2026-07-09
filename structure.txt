@@ -1,0 +1,27 @@
+Account: ogni dipendende con email aziendale ha accesso, utilizziamo mail Microsoft 365 gestite da Outlook. nomecognome@vernay.com. Per ora questa funaioznalità
+Dovrò chidere l'autorizzazione al comparto IT, per ora facciamo una pagina fasulla con admin admin come ID password.
+
+Una volta entrati nel proprio account voglio una struttura di questo tipo:
+Richieste mandate, richieste rimandate da modificare, richieste prese in carico, richieste chiuse. Le richieste chiuse rimangono con tutte le info e la possibilità di scaricare il pdf associato per 90 giorni (per ora il pdf sarà finto creiamo la struttura per gestirli)
+Le richieste rimandate da modificare è quando l'ingegnere ha chiesto di modificare qualche cosa etc... 
+Altra pagina con tutti i test per cui si può fare richiesta per ora teniamo solo Air Flow test e Water flow test. 
+
+In Funvtinal Test Request Template.xlsx trovi quello che devono compilare ( per ora in test type abbiamo solo il primo).
+
+Quindi vorrei fare una pagina in cui  ci sono tutti i campi, con le istruzioni che ci sono nel file se ci vanno sopra con il mouse. Ogni campo deve essere limitato, a numeri o date o parole in base a cosa è.
+
+Al fondo non mettiamo la parte To be Filled in by Testlab, ma che si possono aggiungere fino a 10 delle altre pagine che trovi nel file (sono tutti uguali).
+
+Questa è la struttura lato "cliente". Ora parliamo del lato provider, per ora account con id test_eng, test_eng. (Ogniuno di questi sarà associato ad alcuni test Flow, CTscan etc) e potrà vedere solo quelle richieste e gestirle.
+
+Da lato suo Quando entra avrà "Richieste mandate" dove può aprirle una per una vederle accettarle, rimandare indietro per cambiare cose o chiedere dettagli.
+Rochieste in corso, che può aprire e mandare i risultati per chiudere, quindi caricare il pdf o altri files. 
+Richieste chiuse, per cliente con un sistema di ricerca. 
+
+Vorrei poi gestire delle email per mandare i vari aggiornamenti, per ora non mettiamolo sarà il prossimo step. 
+
+
+Comparto visivo: 
+Usare questi colori: R: 52 G: 122 B: 128,  R: 255 G: 255 B: 255,  R: 235 G: 119 B: 4
+E mettere il logo. 
+

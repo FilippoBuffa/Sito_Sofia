@@ -1,0 +1,107 @@
+
+Foglio da stampare ed allegare con informazioni chiave. 
+    - codice richiesta 
+    - codice pezzo
+    - gruppi con numero per gruppo
+    - nome del richiedente
+    - altre info che ritieni utile. 
+Aspettare i pezzi:
+    dobbiamo aggiungere un passaggio, dopo la prima richiesta e l'accettazione da parte del ENG, si va in spedizione pezzi. 
+    Al cliente compare il foglio da stampare e allegare alla spedizione. Una volta spedito lo comunica "Spedito" e ritorna all'ENG.
+    Una volta che l'eng ha ricevuto, controllato i pezzi e la bontà degli stessi premerà "accettato" e a quel punto andrà in progress. 
+    Qui l'eng metterà la estimated week di consegna del report e di quello chiesto. 
+
+form di richiesta aggiungere alle informazioni (nei gruppi si ereditano queste informazioni, possono essere cambiate):
+    - aggoiungere location: VAS,VGR,VSU,VOL,VKE,VYS, VMI, cliente esterno 
+    - aggiungere dipartimento: campo aperto
+    - aggiungere progetto: Campo aperto (facoltativo)
+    - aggiungere: tipo valvola (lista+ nel caso campo aperto)
+    - aggiungere: codice pezzo (nelle informazioni)
+    - tipo report (solo dati, personalizzato con delle informazioni)
+
+Aggiungere allegati alla richiesta, alla prima richiesta voglio che il cliente possa caricare degli allegati, disegni dell pezzo o altro. 
+
+
+Rendere tutto in inglese, anche le mail. Deve essere consistente. 
+ 
+
+ Questa è la lista del tipo valvola:
+ assembly
+armature
+ball check assembly
+ball/spring assy
+battery vent valve assembly
+battery vent valve assembly seat
+bi-di
+bi di
+bi-di vent valve assembly
+bongo
+breather assy
+combo
+combo duckbill
+combination
+competitor disc valve
+cross slit bi-di
+cross slit duckbill
+diaphragm
+disc
+disc valve
+dispensing valve
+dock gasket
+dome
+dome valve
+drain valve assembly
+duckbill
+duckbill assembly
+duckbill assy
+duckbill seal
+duckdisk
+eurovalve
+fimo assembly
+fimo body (no cap)
+fito assembly
+flow control
+flow washer
+hot water flow control
+inserted diaphragm
+introducer valve
+inverted dome valve
+inverted spherical dome
+iv valve
+level switch diaphragm
+magnetically adjustable hydrocephalus shunt valve
+medical assembly
+membrane
+mini duckbill
+mini tito assy
+mini umbrella
+mixing valve diaphragm
+mimo assembly
+nis site
+poppet
+rear tube feed valve
+reed valve assembly
+reverse umbrella
+semi permeable membrane
+semi-permeable membrane
+septum
+slit diaphragm
+spring loaded poppet
+stainless steel check valve
+supravalve
+supravalve assy
+t-valve assy
+tank vent assy
+thermal barrier
+timo assembly
+tito assembly
+trans vent valve assembly
+tube valve
+umbrella
+umbrella assembly
+umbrella/cap assembly
+umbrella/dome combo
+vent valve assembly
+v-ball
+v-seat
+v-seat w/ spring loaded ball

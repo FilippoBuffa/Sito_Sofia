@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+{% block title %}{{ req.tr_number }} — Vernay TestLab{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center gap-3 mb-4 flex-wrap">
+  <a href="{{ url_for('client.dashboard') }}" class="btn btn-sm btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i>
+  </a>
+  <h4 class="page-title mb-0">{{ req.tr_number }}</h4>
+  <span class="badge badge-{{ req.status }} fs-6">{{ req.status_label }}</span>
+  <span class="badge badge-{{ req.priority }} ms-1">{{ req.priority_label }}</span>
+
+  <div class="ms-auto d-flex gap-2 flex-wrap">
+    {% if req.status == 'returned' %}
+      <a href="{{ url_for('client.edit_request', request_id=req.id) }}"
+         class="btn btn-accent">
+        <i class="bi bi-pencil-square me-1"></i> Edit & Resubmit
+      </a>
+    {% endif %}
+
+    {% if req.status in ('awaiting_parts', 'parts_shipped', 'in_progress', 'closed') %}
+      <a href="{{ url_for('client.shipping_sheet', request_id=req.id) }}"
+         class="btn btn-outline-secondary" target="_blank">
+        <i class="bi bi-printer me-1"></i> Shipping Sheet
+      </a>
+    {% endif %}
+
+    {% if req.status == 'awaiting_parts' %}
+      <button class="btn btn-primary-vernay" data-bs-toggle="modal" data-bs-target="#markShippedModal">
+        <i class="bi bi-truck me-1"></i> Mark as Shipped
+      </button>
+    {% endif %}
+
+    {% if req.status == 'closed' and req.can_be_downloaded and req.result_file_path %}
+      <a href="{{ url_for('engineer.download_result', request_id=req.id) }}"
+         class="btn btn-primary-vernay">
+        <i class="bi bi-download me-1"></i> Download Result
+      </a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-4">
+
+  {# ── Test Info ── #}
+  <div class="col-12 col-lg-7">
+    <div class="form-section">
+      <div class="form-section-title"><i class="bi bi-info-circle me-2"></i>Test Information</div>
+      <dl class="row mb-0">
+        <dt class="col-sm-5">Service</dt>
+        <dd class="col-sm-7">{{ req.service.name }}</dd>
+        <dt class="col-sm-5">Test Type</dt>
+        <dd class="col-sm-7">{{ req.test_type }}</dd>
+        <dt class="col-sm-5">Requested By</dt>
+        <dd class="col-sm-7">{{ req.requester.display_name }}</dd>
+        <dt class="col-sm-5">Date Submitted</dt>
+        <dd class="col-sm-7">{{ req.date_submitted.strftime('%d %b %Y, %H:%M') }}</dd>
+        {% if req.need_by_date %}
+        <dt class="col-sm-5">Need By</dt>
+        <dd class="col-sm-7">{{ req.need_by_date.strftime('%d %b %Y') }}</dd>
+        {% endif %}
+        {% if req.location %}
+        <dt class="col-sm-5">Location</dt>
+        <dd class="col-sm-7">{{ req.location }}</dd>
+        {% endif %}
+        {% if req.department %}
+        <dt class="col-sm-5">Department</dt>
+        <dd class="col-sm-7">{{ req.department }}</dd>
+        {% endif %}
+        {% if req.project %}
+        <dt class="col-sm-5">Project</dt>
+        <dd class="col-sm-7">{{ req.project }}</dd>
+        {% endif %}
+        {% if req.valve_type %}
+        <dt class="col-sm-5">Valve Type</dt>
+        <dd class="col-sm-7">{{ req.valve_type_display }}</dd>
+        {% endif %}
+        {% if req.part_number %}
+        <dt class="col-sm-5">Part Number</dt>
+        <dd class="col-sm-7">{{ req.part_number }}</dd>
+        {% endif %}
+        {% if req.report_type %}
+        <dt class="col-sm-5">Report Type</dt>
+        <dd class="col-sm-7">{{ 'Data Only' if req.report_type == 'data_only' else 'Custom' }}</dd>
+        {% endif %}
+        {% if req.report_notes %}
+        <dt class="col-sm-5">Report Notes</dt>
+        <dd class="col-sm-7">{{ req.report_notes }}</dd>
+        {% endif %}
+        {% if req.fluid %}
+        <dt class="col-sm-5">Fluid</dt>
+        <dd class="col-sm-7">{{ req.fluid | capitalize }}</dd>
+        {% endif %}
+        {% if req.max_forward_pressure %}
+        <dt class="col-sm-5">Max Forward Pressure</dt>
+        <dd class="col-sm-7">{{ req.max_forward_pressure }}</dd>
+        {% endif %}
+        <dt class="col-sm-5">Previously Tested?</dt>
+        <dd class="col-sm-7">{{ 'Yes' if req.previously_tested else 'No' }}</dd>
+        {% if req.previous_tr_numbers %}
+        <dt class="col-sm-5">Previous TR#(s)</dt>
+        <dd class="col-sm-7">{{ req.previous_tr_numbers }}</dd>
+        {% endif %}
+        {% if req.assigned_engineer %}
+        <dt class="col-sm-5">Assigned Engineer</dt>
+        <dd class="col-sm-7">{{ req.assigned_engineer.display_name }}</dd>
+        {% endif %}
+        {% if req.date_shipped %}
+        <dt class="col-sm-5">Parts Shipped</dt>
+        <dd class="col-sm-7">{{ req.date_shipped.strftime('%d %b %Y') }}</dd>
+        {% endif %}
+        {% if req.date_parts_received %}
+        <dt class="col-sm-5">Parts Received</dt>
+        <dd class="col-sm-7">{{ req.date_parts_received.strftime('%d %b %Y') }}</dd>
+        {% endif %}
+        {% if req.estimated_delivery %}
+        <dt class="col-sm-5">Estimated Delivery</dt>
+        <dd class="col-sm-7">{{ req.estimated_delivery.strftime('%d %b %Y') }}</dd>
+        {% endif %}
+        {% if req.date_closed %}
+        <dt class="col-sm-5">Date Closed</dt>
+        <dd class="col-sm-7">{{ req.date_closed.strftime('%d %b %Y') }}</dd>
+        {% endif %}
+      </dl>
+      {% if req.test_purpose %}
+      <hr class="my-3" />
+      <strong>Test Purpose</strong>
+      <p class="mt-1 text-muted">{{ req.test_purpose }}</p>
+      {% endif %}
+      {% if req.additional_instructions %}
+      <strong>Additional Instructions</strong>
+      <p class="mt-1 text-muted">{{ req.additional_instructions }}</p>
+      {% endif %}
+    </div>
+
+    {# Attachments #}
+    {% if attachments %}
+    <div class="form-section">
+      <div class="form-section-title"><i class="bi bi-paperclip me-2"></i>Attachments</div>
+      {% for att in attachments %}
+      <div class="d-flex justify-content-between align-items-center py-1 border-bottom">
+        <span style="font-size:0.9rem;"><i class="bi bi-file-earmark me-1"></i>{{ att.original_filename }}</span>
+        <a href="{{ url_for('engineer.download_attachment', attachment_id=att.id) }}"
+           class="btn btn-sm btn-outline-secondary">
+          <i class="bi bi-download"></i>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {# Part Groups #}
+    {% for pg in part_groups %}
+    <div class="form-section">
+      <div class="form-section-title">
+        <i class="bi bi-box-seam me-2"></i>Group {{ pg.group_letter }}
+        {% if pg.group_id %}<span class="fw-normal text-muted ms-2">— {{ pg.group_id }}</span>{% endif %}
+      </div>
+      <dl class="row mb-0" style="font-size:0.9rem;">
+        {% if pg.location %}
+        <dt class="col-sm-5">Location</dt><dd class="col-sm-7">{{ pg.location_label }}</dd>
+        {% endif %}
+        {% if pg.valve_type %}
+        <dt class="col-sm-5">Valve Type</dt><dd class="col-sm-7">{{ pg.valve_type_display }}</dd>
+        {% endif %}
+        {% if pg.part_number %}
+        <dt class="col-sm-5">Part Number</dt><dd class="col-sm-7">{{ pg.part_number }}</dd>
+        {% endif %}
+        {% if pg.quantity %}
+        <dt class="col-sm-5">Quantity</dt><dd class="col-sm-7">{{ pg.quantity }}</dd>
+        {% endif %}
+        {% if pg.group_type %}
+        <dt class="col-sm-5">Group Type</dt><dd class="col-sm-7">{{ pg.group_type_label }}</dd>
+        {% endif %}
+        {% if pg.manufacturing_process %}
+        <dt class="col-sm-5">Manufacturing Process</dt>
+        <dd class="col-sm-7">
+          {{ pg.manufacturing_process_label }}
+          {% if pg.manufacturing_process == 'other' and pg.manufacturing_process_other %}
+            — {{ pg.manufacturing_process_other }}
+          {% endif %}
+        </dd>
+        {% endif %}
+        {% if pg.inspected is not none %}
+        <dt class="col-sm-5">Inspected</dt><dd class="col-sm-7">{{ 'Yes' if pg.inspected else 'No' }}</dd>
+        {% endif %}
+        {% if pg.part_type %}
+        <dt class="col-sm-5">Part Type</dt><dd class="col-sm-7">{{ pg.part_type }}</dd>
+        {% endif %}
+        {% if pg.vl_part_number %}
+        <dt class="col-sm-5">VL Part Number</dt><dd class="col-sm-7">{{ pg.vl_part_number }}</dd>
+        {% endif %}
+        {% if pg.va_number %}
+        <dt class="col-sm-5">VA Number</dt><dd class="col-sm-7">{{ pg.va_number }}</dd>
+        {% endif %}
+        {% if pg.x_number %}
+        <dt class="col-sm-5">X Number</dt><dd class="col-sm-7">{{ pg.x_number }}</dd>
+        {% endif %}
+        {% if pg.material_lab_code %}
+        <dt class="col-sm-5">Material Lab Code</dt><dd class="col-sm-7">{{ pg.material_lab_code }}</dd>
+        {% endif %}
+        {% if pg.material_prod_code %}
+        <dt class="col-sm-5">Material Prod. Code</dt><dd class="col-sm-7">{{ pg.material_prod_code }}</dd>
+        {% endif %}
+        {% if pg.batch_no %}
+        <dt class="col-sm-5">Batch No</dt><dd class="col-sm-7">{{ pg.batch_no }}</dd>
+        {% endif %}
+        {% if pg.alternate_batch_no %}
+        <dt class="col-sm-5">Alternate Batch No</dt><dd class="col-sm-7">{{ pg.alternate_batch_no }}</dd>
+        {% endif %}
+        {% if pg.production_location %}
+        <dt class="col-sm-5">Production Location</dt><dd class="col-sm-7">{{ pg.production_location }}</dd>
+        {% endif %}
+        {% if pg.mold_date %}
+        <dt class="col-sm-5">Mold Date</dt><dd class="col-sm-7">{{ pg.mold_date.strftime('%d %b %Y') }}</dd>
+        {% endif %}
+        {% if pg.post_cure %}
+        <dt class="col-sm-5">Post Cure</dt><dd class="col-sm-7">{{ pg.post_cure }}</dd>
+        {% endif %}
+        {% if pg.mold_tool_number %}
+        <dt class="col-sm-5">Mold T-#</dt><dd class="col-sm-7">{{ pg.mold_tool_number }}</dd>
+        {% endif %}
+        {% if pg.other_description %}
+        <dt class="col-sm-5">Other Description</dt><dd class="col-sm-7">{{ pg.other_description }}</dd>
+        {% endif %}
+      </dl>
+    </div>
+    {% endfor %}
+  </div>
+
+  {# ── Comments ── #}
+  <div class="col-12 col-lg-5">
+    <div class="form-section">
+      <div class="form-section-title"><i class="bi bi-chat-left-text me-2"></i>Comments</div>
+
+      {% if comments %}
+        {% for c in comments %}
+          <div class="comment-bubble {% if c.text.startswith('[Returned]') %}returned-comment{% elif c.author.is_engineer %}engineer-comment{% endif %}">
+            <div class="comment-meta">
+              <strong>{{ c.author.display_name }}</strong>
+              <span class="badge bg-secondary ms-1" style="font-size:0.65rem;">{{ c.author.role }}</span>
+              — {{ c.timestamp.strftime('%d %b %Y, %H:%M') }}
+            </div>
+            {{ c.text }}
+          </div>
+        {% endfor %}
+      {% else %}
+        <p class="empty-state">No comments yet.</p>
+      {% endif %}
+
+      <hr />
+      <form method="POST" action="{{ url_for('client.request_detail', request_id=req.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <label class="form-label fw-semibold">Add a comment</label>
+        <textarea name="comment_text" class="form-control mb-2" rows="3"
+                  placeholder="Type your message…" maxlength="2000"></textarea>
+        <button type="submit" class="btn btn-primary-vernay btn-sm">
+          <i class="bi bi-send me-1"></i> Send
+        </button>
+      </form>
+    </div>
+  </div>
+
+</div>
+
+{# ── Mark as Shipped Modal ── #}
+{% if req.status == 'awaiting_parts' %}
+<div class="modal fade" id="markShippedModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="{{ url_for('client.mark_shipped', request_id=req.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <div class="modal-header" style="background:var(--teal); color:white;">
+          <h5 class="modal-title"><i class="bi bi-truck me-2"></i>Confirm Shipment</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p>Confirm that you have shipped the parts for <strong>{{ req.tr_number }}</strong>.</p>
+          <p class="text-muted" style="font-size:0.9rem;">
+            The lab engineer will be notified. Make sure the
+            <a href="{{ url_for('client.shipping_sheet', request_id=req.id) }}" target="_blank">
+              shipping sheet
+            </a> is attached to your package.
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary-vernay">
+            <i class="bi bi-truck me-1"></i> Confirm — Parts Shipped
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}

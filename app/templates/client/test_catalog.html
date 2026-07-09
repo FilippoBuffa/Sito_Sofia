@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Test Catalog — Vernay TestLab{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+  <h4 class="page-title"><i class="bi bi-flask me-2"></i>Available Tests</h4>
+  <p class="text-muted">Select a test type to create a new request.</p>
+</div>
+
+<div class="row g-3">
+  {% for service in services %}
+  <div class="col-12 col-md-6 col-lg-4">
+    <a href="{{ url_for('client.new_request', service_id=service.id) }}" class="text-decoration-none">
+      <div class="service-card p-4 h-100">
+        <div class="service-icon mb-3">
+          {% if 'air' in service.name.lower() %}
+            <i class="bi bi-wind"></i>
+          {% elif 'water' in service.name.lower() %}
+            <i class="bi bi-droplet"></i>
+          {% else %}
+            <i class="bi bi-clipboard-check"></i>
+          {% endif %}
+        </div>
+        <h5 class="fw-bold" style="color: var(--teal);">{{ service.name }}</h5>
+        {% if service.description %}
+          <p class="text-muted mb-0" style="font-size:0.9rem;">{{ service.description }}</p>
+        {% endif %}
+      </div>
+    </a>
+  </div>
+  {% else %}
+  <div class="col-12">
+    <p class="empty-state">No tests currently available. Contact the lab.</p>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

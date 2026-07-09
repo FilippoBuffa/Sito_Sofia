@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}Engineer Dashboard — Vernay TestLab{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="page-title mb-0">
+    <i class="bi bi-tools me-2"></i>Engineer Dashboard
+  </h4>
+  <span class="text-muted" style="font-size:0.85rem;">
+    Services:
+    {% for s in current_user.services %}
+      <span class="badge" style="background:var(--teal);">{{ s.name }}</span>
+    {% endfor %}
+  </span>
+</div>
+
+<div class="row g-4">
+
+  {# ── Submitted ── #}
+  <div class="col-12 col-lg-6">
+    <div class="section-header submitted">
+      <i class="bi bi-inbox"></i> Incoming Requests
+      <span class="badge bg-white text-dark ms-auto">{{ submitted|length }}</span>
+    </div>
+    <div class="request-card">
+      {% if submitted %}
+        {% for req in submitted %}
+          {{ _eng_row(req) }}
+        {% endfor %}
+      {% else %}
+        <p class="empty-state"><i class="bi bi-check2-all me-1"></i>No new requests.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  {# ── Awaiting Parts ── #}
+  <div class="col-12 col-lg-6">
+    <div class="section-header awaiting_parts">
+      <i class="bi bi-box-arrow-in-down"></i> Awaiting Parts
+      <span class="badge bg-white text-dark ms-auto">{{ awaiting_parts|length }}</span>
+    </div>
+    <div class="request-card">
+      {% if awaiting_parts %}
+        {% for req in awaiting_parts %}
+          {{ _eng_row(req) }}
+        {% endfor %}
+      {% else %}
+        <p class="empty-state"><i class="bi bi-box me-1"></i>No requests awaiting parts.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  {# ── Parts Shipped ── #}
+  <div class="col-12 col-lg-6">
+    <div class="section-header parts_shipped">
+      <i class="bi bi-truck"></i> Parts Shipped
+      <span class="badge bg-dark ms-auto">{{ parts_shipped|length }}</span>
+    </div>
+    <div class="request-card">
+      {% if parts_shipped %}
+        {% for req in parts_shipped %}
+          {{ _eng_row(req) }}
+        {% endfor %}
+      {% else %}
+        <p class="empty-state"><i class="bi bi-truck me-1"></i>No parts in transit.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  {# ── In Progress ── #}
+  <div class="col-12 col-lg-6">
+    <div class="section-header in_progress">
+      <i class="bi bi-hourglass-split"></i> In Progress
+      <span class="badge bg-white text-dark ms-auto">{{ in_progress|length }}</span>
+    </div>
+    <div class="request-card">
+      {% if in_progress %}
+        {% for req in in_progress %}
+          {{ _eng_row(req) }}
+        {% endfor %}
+      {% else %}
+        <p class="empty-state"><i class="bi bi-clock me-1"></i>Nothing in progress.</p>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+
+{# ── Closed ── #}
+<div class="mt-4">
+  <div class="section-header closed">
+    <i class="bi bi-archive"></i> Closed Requests
+    <form method="GET" class="ms-auto d-flex gap-2" style="margin-bottom:0;">
+      <input type="text" name="q" value="{{ search_query }}"
+             class="form-control form-control-sm bg-white text-dark"
+             placeholder="Search TR#, requester…"
+             style="max-width:240px;" />
+      <button type="submit" class="btn btn-sm btn-light">
+        <i class="bi bi-search"></i>
+      </button>
+      {% if search_query %}
+        <a href="{{ url_for('engineer.dashboard') }}" class="btn btn-sm btn-outline-light">
+          <i class="bi bi-x"></i>
+        </a>
+      {% endif %}
+    </form>
+  </div>
+  <div class="request-card">
+    {% if closed %}
+      {% for req in closed %}
+        {{ _eng_row(req) }}
+      {% endfor %}
+    {% else %}
+      <p class="empty-state">
+        {% if search_query %}No results for "{{ search_query }}".
+        {% else %}<i class="bi bi-archive me-1"></i>No closed requests.{% endif %}
+      </p>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}
+
+{% macro _eng_row(req) %}
+<div class="card-body border-bottom d-flex justify-content-between align-items-center py-2 px-3">
+  <div>
+    <span class="tr-number">{{ req.tr_number }}</span>
+    <span class="ms-2 text-muted" style="font-size:0.82rem;">{{ req.service.name }}</span>
+    <br/>
+    <small class="text-muted">
+      {{ req.requester.display_name }} · {{ req.date_submitted.strftime('%d %b %Y') }}
+    </small>
+    <span class="badge badge-{{ req.priority }} ms-2" style="font-size:0.7rem;">{{ req.priority_label }}</span>
+  </div>
+  <a href="{{ url_for('engineer.request_detail', request_id=req.id) }}"
+     class="btn btn-sm btn-primary-vernay">View</a>
+</div>
+{% endmacro %}

@@ -1,0 +1,339 @@
+{% extends "base.html" %}
+{% block title %}{{ req.tr_number }} — Engineer View{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center gap-3 mb-4 flex-wrap">
+  <a href="{{ url_for('engineer.dashboard') }}" class="btn btn-sm btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i>
+  </a>
+  <h4 class="page-title mb-0">{{ req.tr_number }}</h4>
+  <span class="badge badge-{{ req.status }} fs-6">{{ req.status_label }}</span>
+  <span class="badge badge-{{ req.priority }}">{{ req.priority_label }}</span>
+
+  {# ── Quick actions ── #}
+  {% if req.status == 'submitted' %}
+    <div class="ms-auto d-flex gap-2">
+      <form method="POST" action="{{ url_for('engineer.accept', request_id=req.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <button type="submit" class="btn btn-primary-vernay">
+          <i class="bi bi-check-lg me-1"></i> Accept — Notify Client to Ship
+        </button>
+      </form>
+      <button class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#returnModal">
+        <i class="bi bi-arrow-return-left me-1"></i> Return
+      </button>
+    </div>
+  {% elif req.status == 'awaiting_parts' %}
+    <div class="ms-auto d-flex gap-2">
+      <button class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#returnModal">
+        <i class="bi bi-arrow-return-left me-1"></i> Return
+      </button>
+    </div>
+  {% elif req.status == 'parts_shipped' %}
+    <div class="ms-auto d-flex gap-2">
+      <button class="btn btn-primary-vernay" data-bs-toggle="modal" data-bs-target="#partsReceivedModal">
+        <i class="bi bi-box-arrow-in-down me-1"></i> Parts Received
+      </button>
+    </div>
+  {% elif req.status == 'in_progress' %}
+    <div class="ms-auto d-flex gap-2">
+      <button class="btn btn-accent" data-bs-toggle="modal" data-bs-target="#closeModal">
+        <i class="bi bi-upload me-1"></i> Upload Results & Close
+      </button>
+      <button class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#returnModal">
+        <i class="bi bi-arrow-return-left me-1"></i> Return
+      </button>
+    </div>
+  {% endif %}
+</div>
+
+<div class="row g-4">
+
+  {# ── Test Info ── #}
+  <div class="col-12 col-lg-7">
+    <div class="form-section">
+      <div class="form-section-title"><i class="bi bi-info-circle me-2"></i>Test Information</div>
+      <dl class="row mb-0">
+        <dt class="col-sm-5">Service</dt><dd class="col-sm-7">{{ req.service.name }}</dd>
+        <dt class="col-sm-5">Test Type</dt><dd class="col-sm-7">{{ req.test_type }}</dd>
+        <dt class="col-sm-5">Requested By</dt><dd class="col-sm-7">{{ req.requester.display_name }}</dd>
+        <dt class="col-sm-5">Date Submitted</dt>
+        <dd class="col-sm-7">{{ req.date_submitted.strftime('%d %b %Y, %H:%M') }}</dd>
+        {% if req.need_by_date %}
+        <dt class="col-sm-5">Need By</dt>
+        <dd class="col-sm-7 {% if req.need_by_date < today %}text-danger fw-bold{% endif %}">
+          {{ req.need_by_date.strftime('%d %b %Y') }}
+          {% if req.need_by_date < today %}<i class="bi bi-exclamation-triangle ms-1"></i>{% endif %}
+        </dd>
+        {% endif %}
+        {% if req.location %}
+        <dt class="col-sm-5">Location</dt><dd class="col-sm-7">{{ req.location }}</dd>
+        {% endif %}
+        {% if req.department %}
+        <dt class="col-sm-5">Department</dt><dd class="col-sm-7">{{ req.department }}</dd>
+        {% endif %}
+        {% if req.project %}
+        <dt class="col-sm-5">Project</dt><dd class="col-sm-7">{{ req.project }}</dd>
+        {% endif %}
+        {% if req.valve_type %}
+        <dt class="col-sm-5">Valve Type</dt>
+        <dd class="col-sm-7">{{ req.valve_type_display }}</dd>
+        {% endif %}
+        {% if req.part_number %}
+        <dt class="col-sm-5">Part Number</dt><dd class="col-sm-7">{{ req.part_number }}</dd>
+        {% endif %}
+        {% if req.report_type %}
+        <dt class="col-sm-5">Report Type</dt>
+        <dd class="col-sm-7">{{ 'Data Only' if req.report_type == 'data_only' else 'Custom' }}</dd>
+        {% endif %}
+        {% if req.report_notes %}
+        <dt class="col-sm-5">Report Notes</dt><dd class="col-sm-7">{{ req.report_notes }}</dd>
+        {% endif %}
+        {% if req.fluid %}
+        <dt class="col-sm-5">Fluid</dt><dd class="col-sm-7">{{ req.fluid | capitalize }}</dd>
+        {% endif %}
+        {% if req.max_forward_pressure %}
+        <dt class="col-sm-5">Max Forward Pressure</dt><dd class="col-sm-7">{{ req.max_forward_pressure }}</dd>
+        {% endif %}
+        <dt class="col-sm-5">Previously Tested?</dt>
+        <dd class="col-sm-7">{{ 'Yes' if req.previously_tested else 'No' }}</dd>
+        {% if req.previous_tr_numbers %}
+        <dt class="col-sm-5">Previous TR#(s)</dt><dd class="col-sm-7">{{ req.previous_tr_numbers }}</dd>
+        {% endif %}
+        <dt class="col-sm-5">Total Groups</dt><dd class="col-sm-7">{{ req.total_groups }}</dd>
+        {% if req.date_shipped %}
+        <dt class="col-sm-5">Parts Shipped</dt>
+        <dd class="col-sm-7">{{ req.date_shipped.strftime('%d %b %Y') }}</dd>
+        {% endif %}
+        {% if req.date_parts_received %}
+        <dt class="col-sm-5">Parts Received</dt>
+        <dd class="col-sm-7">{{ req.date_parts_received.strftime('%d %b %Y') }}</dd>
+        {% endif %}
+        {% if req.estimated_delivery %}
+        <dt class="col-sm-5">Estimated Delivery</dt>
+        <dd class="col-sm-7">{{ req.estimated_delivery.strftime('%d %b %Y') }}</dd>
+        {% endif %}
+        {% if req.date_closed %}
+        <dt class="col-sm-5">Date Closed</dt>
+        <dd class="col-sm-7">{{ req.date_closed.strftime('%d %b %Y') }}</dd>
+        {% endif %}
+      </dl>
+      {% if req.test_purpose %}
+      <hr class="my-3"/>
+      <strong>Test Purpose</strong>
+      <p class="mt-1 text-muted">{{ req.test_purpose }}</p>
+      {% endif %}
+      {% if req.additional_instructions %}
+      <strong>Additional Instructions</strong>
+      <p class="mt-1 text-muted">{{ req.additional_instructions }}</p>
+      {% endif %}
+    </div>
+
+    {# Attachments #}
+    {% if attachments %}
+    <div class="form-section">
+      <div class="form-section-title"><i class="bi bi-paperclip me-2"></i>Attachments</div>
+      {% for att in attachments %}
+      <div class="d-flex justify-content-between align-items-center py-1 border-bottom">
+        <span style="font-size:0.9rem;"><i class="bi bi-file-earmark me-1"></i>{{ att.original_filename }}</span>
+        <a href="{{ url_for('engineer.download_attachment', attachment_id=att.id) }}"
+           class="btn btn-sm btn-outline-secondary">
+          <i class="bi bi-download"></i>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% for pg in part_groups %}
+    <div class="form-section">
+      <div class="form-section-title">
+        <i class="bi bi-box-seam me-2"></i>Group {{ pg.group_letter }}
+        {% if pg.group_id %}<span class="fw-normal text-muted ms-2">— {{ pg.group_id }}</span>{% endif %}
+      </div>
+      <dl class="row mb-0" style="font-size:0.9rem;">
+        {% if pg.location %}
+        <dt class="col-sm-5">Location</dt><dd class="col-sm-7">{{ pg.location_label }}</dd>{% endif %}
+        {% if pg.valve_type %}
+        <dt class="col-sm-5">Valve Type</dt><dd class="col-sm-7">{{ pg.valve_type_display }}</dd>{% endif %}
+        {% if pg.part_number %}
+        <dt class="col-sm-5">Part Number</dt><dd class="col-sm-7">{{ pg.part_number }}</dd>{% endif %}
+        {% if pg.quantity %}
+        <dt class="col-sm-5">Quantity</dt><dd class="col-sm-7">{{ pg.quantity }}</dd>{% endif %}
+        {% if pg.group_type %}
+        <dt class="col-sm-5">Group Type</dt><dd class="col-sm-7">{{ pg.group_type_label }}</dd>{% endif %}
+        {% if pg.manufacturing_process %}
+        <dt class="col-sm-5">Mfg Process</dt>
+        <dd class="col-sm-7">{{ pg.manufacturing_process_label }}
+          {% if pg.manufacturing_process == 'other' and pg.manufacturing_process_other %}— {{ pg.manufacturing_process_other }}{% endif %}
+        </dd>{% endif %}
+        {% if pg.inspected is not none %}
+        <dt class="col-sm-5">Inspected</dt><dd class="col-sm-7">{{ 'Yes' if pg.inspected else 'No' }}</dd>{% endif %}
+        {% if pg.part_type %}
+        <dt class="col-sm-5">Part Type</dt><dd class="col-sm-7">{{ pg.part_type }}</dd>{% endif %}
+        {% if pg.vl_part_number %}
+        <dt class="col-sm-5">VL Part #</dt><dd class="col-sm-7">{{ pg.vl_part_number }}</dd>{% endif %}
+        {% if pg.va_number %}
+        <dt class="col-sm-5">VA Number</dt><dd class="col-sm-7">{{ pg.va_number }}</dd>{% endif %}
+        {% if pg.x_number %}
+        <dt class="col-sm-5">X Number</dt><dd class="col-sm-7">{{ pg.x_number }}</dd>{% endif %}
+        {% if pg.material_lab_code %}
+        <dt class="col-sm-5">Material Lab Code</dt><dd class="col-sm-7">{{ pg.material_lab_code }}</dd>{% endif %}
+        {% if pg.material_prod_code %}
+        <dt class="col-sm-5">Material Prod. Code</dt><dd class="col-sm-7">{{ pg.material_prod_code }}</dd>{% endif %}
+        {% if pg.batch_no %}
+        <dt class="col-sm-5">Batch No</dt><dd class="col-sm-7">{{ pg.batch_no }}</dd>{% endif %}
+        {% if pg.alternate_batch_no %}
+        <dt class="col-sm-5">Alt. Batch No</dt><dd class="col-sm-7">{{ pg.alternate_batch_no }}</dd>{% endif %}
+        {% if pg.production_location %}
+        <dt class="col-sm-5">Production Location</dt><dd class="col-sm-7">{{ pg.production_location }}</dd>{% endif %}
+        {% if pg.mold_date %}
+        <dt class="col-sm-5">Mold Date</dt><dd class="col-sm-7">{{ pg.mold_date.strftime('%d %b %Y') }}</dd>{% endif %}
+        {% if pg.post_cure %}
+        <dt class="col-sm-5">Post Cure</dt><dd class="col-sm-7">{{ pg.post_cure }}</dd>{% endif %}
+        {% if pg.mold_tool_number %}
+        <dt class="col-sm-5">Mold T-#</dt><dd class="col-sm-7">{{ pg.mold_tool_number }}</dd>{% endif %}
+        {% if pg.other_description %}
+        <dt class="col-sm-5">Other</dt><dd class="col-sm-7">{{ pg.other_description }}</dd>{% endif %}
+      </dl>
+    </div>
+    {% endfor %}
+  </div>
+
+  {# ── Comments ── #}
+  <div class="col-12 col-lg-5">
+    <div class="form-section">
+      <div class="form-section-title"><i class="bi bi-chat-left-text me-2"></i>Comments</div>
+
+      {% if comments %}
+        {% for c in comments %}
+          <div class="comment-bubble {% if c.text.startswith('[Returned]') %}returned-comment{% elif c.author.is_engineer %}engineer-comment{% endif %}">
+            <div class="comment-meta">
+              <strong>{{ c.author.display_name }}</strong>
+              <span class="badge bg-secondary ms-1" style="font-size:0.65rem;">{{ c.author.role }}</span>
+              — {{ c.timestamp.strftime('%d %b %Y, %H:%M') }}
+            </div>
+            {{ c.text }}
+          </div>
+        {% endfor %}
+      {% else %}
+        <p class="empty-state">No comments yet.</p>
+      {% endif %}
+
+      <hr />
+      <form method="POST" action="{{ url_for('engineer.request_detail', request_id=req.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <label class="form-label fw-semibold">Add a comment</label>
+        <textarea name="comment_text" class="form-control mb-2" rows="3"
+                  placeholder="Type your message…" maxlength="2000"></textarea>
+        <button type="submit" class="btn btn-primary-vernay btn-sm">
+          <i class="bi bi-send me-1"></i> Send
+        </button>
+      </form>
+    </div>
+  </div>
+
+</div>
+
+{# ── Return Modal ── #}
+{% if req.status in ('submitted', 'awaiting_parts', 'in_progress') %}
+<div class="modal fade" id="returnModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="{{ url_for('engineer.return_request', request_id=req.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <div class="modal-header" style="background:var(--orange); color:white;">
+          <h5 class="modal-title"><i class="bi bi-arrow-return-left me-2"></i>Return Request</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p>Explain what needs to be changed or clarified:</p>
+          <textarea name="return_note" class="form-control" rows="4"
+                    placeholder="Describe the required changes…" required maxlength="2000"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-accent">Return to Client</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{# ── Parts Received Modal ── #}
+{% if req.status == 'parts_shipped' %}
+<div class="modal fade" id="partsReceivedModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="{{ url_for('engineer.parts_received', request_id=req.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <div class="modal-header" style="background:var(--teal); color:white;">
+          <h5 class="modal-title"><i class="bi bi-box-arrow-in-down me-2"></i>Confirm Parts Received</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p>Confirm that parts have been received and testing will begin.</p>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Estimated Delivery Date (optional)</label>
+            <input type="date" name="estimated_delivery" class="form-control"
+                   min="{{ today }}" />
+            <div class="form-text">The client will be notified with this date if provided.</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary-vernay">
+            <i class="bi bi-check-lg me-1"></i> Confirm & Start Testing
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{# ── Close Modal ── #}
+{% if req.status == 'in_progress' %}
+<div class="modal fade" id="closeModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="{{ url_for('engineer.close_request', request_id=req.id) }}"
+            enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <div class="modal-header" style="background:var(--teal); color:white;">
+          <h5 class="modal-title"><i class="bi bi-upload me-2"></i>Upload Results & Close</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Result File <span class="text-danger">*</span></label>
+            <input type="file" name="result_file" class="form-control" required
+                   accept=".pdf,.xlsx,.xls,.csv,.zip,.docx,.doc,.png,.jpg,.jpeg" />
+            <div class="form-text">Accepted: PDF, Excel, CSV, ZIP, Word, Images</div>
+          </div>
+          <div>
+            <label class="form-label fw-semibold">Closing Note (optional)</label>
+            <textarea name="closing_note" class="form-control" rows="3"
+                      placeholder="Any final notes for the client…" maxlength="2000"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary-vernay">
+            <i class="bi bi-check-lg me-1"></i> Close Request
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const today = new Date('{{ today }}');
+</script>
+{% endblock %}

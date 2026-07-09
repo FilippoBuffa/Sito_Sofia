@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shipping Sheet — {{ req.tr_number }}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; font-size: 12px; color: #222; background: #fff; padding: 20px; }
+    .header { display: flex; justify-content: space-between; align-items: center;
+              border-bottom: 3px solid #347A80; padding-bottom: 12px; margin-bottom: 18px; }
+    .header h1 { font-size: 1.3rem; color: #347A80; }
+    .header .logo { font-size: 1.5rem; font-weight: bold; color: #347A80; letter-spacing: 2px; }
+    .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; margin-bottom: 18px; }
+    .meta dt { font-weight: bold; color: #555; }
+    .meta dd { color: #222; }
+    .instructions { background: #fff8e6; border-left: 4px solid #EB7704; padding: 10px 14px;
+                    margin-bottom: 18px; border-radius: 4px; }
+    .instructions strong { color: #EB7704; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 18px; }
+    th { background: #347A80; color: #fff; padding: 8px 10px; text-align: left; font-size: 11px; }
+    td { border: 1px solid #ccc; padding: 7px 10px; vertical-align: top; }
+    tr:nth-child(even) td { background: #f8f8f8; }
+    .footer { margin-top: 24px; border-top: 1px solid #ccc; padding-top: 12px;
+              font-size: 11px; color: #888; display: flex; justify-content: space-between; }
+    .no-print { margin-bottom: 16px; }
+    @media print {
+      .no-print { display: none !important; }
+      body { padding: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="no-print">
+  <button onclick="window.print()" style="background:#347A80;color:#fff;border:none;padding:8px 20px;
+          border-radius:5px;cursor:pointer;font-size:14px;">
+    &#128438; Print / Save as PDF
+  </button>
+  <a href="javascript:history.back()" style="margin-left:12px;color:#347A80;font-size:14px;">← Back</a>
+</div>
+
+<div class="header">
+  <div>
+    <h1>Shipping Sheet</h1>
+    <div style="color:#555;margin-top:4px;">Please attach this sheet to your shipment.</div>
+  </div>
+  <div class="logo">VERNAY</div>
+</div>
+
+<dl class="meta">
+  <dt>TR Number</dt>
+  <dd>{{ req.tr_number }}</dd>
+
+  <dt>Service</dt>
+  <dd>{{ req.service.name }}</dd>
+
+  <dt>Requested By</dt>
+  <dd>{{ req.requester.display_name }}</dd>
+
+  <dt>Date Submitted</dt>
+  <dd>{{ req.date_submitted.strftime('%d %b %Y') }}</dd>
+
+  {% if req.need_by_date %}
+  <dt>Need By Date</dt>
+  <dd>{{ req.need_by_date.strftime('%d %b %Y') }}</dd>
+  {% endif %}
+
+  {% if req.location %}
+  <dt>Location</dt>
+  <dd>{{ req.location }}</dd>
+  {% endif %}
+
+  {% if req.department %}
+  <dt>Department</dt>
+  <dd>{{ req.department }}</dd>
+  {% endif %}
+
+  {% if req.project %}
+  <dt>Project</dt>
+  <dd>{{ req.project }}</dd>
+  {% endif %}
+
+  <dt>Priority</dt>
+  <dd>{{ req.priority_label }}</dd>
+
+  <dt>Sheet Date</dt>
+  <dd>{{ today.strftime('%d %b %Y') }}</dd>
+</dl>
+
+<div class="instructions">
+  <strong>Instructions:</strong> Label each group of parts clearly with the Group letter (A, B, C…)
+  before shipment. Attach this sheet to the outside of the package. Ship to the address
+  provided by the lab engineer.
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Group</th>
+      <th>Valve Type</th>
+      <th>Part Number</th>
+      <th>VL Part #</th>
+      <th>Quantity</th>
+      <th>Group ID</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for pg in part_groups %}
+    <tr>
+      <td><strong>{{ pg.group_letter }}</strong></td>
+      <td>{{ pg.valve_type_display or '—' }}</td>
+      <td>{{ pg.part_number or '—' }}</td>
+      <td>{{ pg.vl_part_number or '—' }}</td>
+      <td>{{ pg.quantity or '—' }}</td>
+      <td>{{ pg.group_id or '—' }}</td>
+      <td>{{ pg.other_description or '' }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div class="footer">
+  <span>Vernay TestLab — {{ req.tr_number }}</span>
+  <span>Generated {{ today.strftime('%d %b %Y') }}</span>
+</div>
+
+</body>
+</html>
