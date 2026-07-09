@@ -12,7 +12,8 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 cp .env.example .env
-# then edit .env: set SECRET_KEY, MAIL_USERNAME, MAIL_PASSWORD, APP_BASE_URL
+# then edit .env: set SECRET_KEY, MAIL_USERNAME, MAIL_PASSWORD, APP_BASE_URL, PORT
+# (PORT only if 8080 is already taken on this machine — keep APP_BASE_URL in sync with it)
 
 python3.10 run.py        # creates instance/app.db, runs migrations-less seed on first run
 ```
@@ -24,10 +25,10 @@ If migrating an existing `instance/app.db` to a fresh checkout, run `flask db up
 ## Running the app
 
 ```bash
-python3.10 run.py        # seeds DB on first run, starts on port 8080 (0.0.0.0)
+python3.10 run.py        # seeds DB on first run, starts on port $PORT or 8080 (0.0.0.0)
 ```
 
-Port 5000 is reserved by the system. The app runs on **8080** (`host=0.0.0.0`, reachable at `http://10.10.11.11:8080`).
+Port 5000 is reserved by the system. Defaults to **8080** (`host=0.0.0.0`), overridable per-machine via `PORT` in `.env` (e.g. if 8080 is already used by another app on that host — keep `APP_BASE_URL` in sync so email links point to the right port). On this machine it's reachable at `http://10.10.11.11:8080`.
 
 ## Dev credentials
 
