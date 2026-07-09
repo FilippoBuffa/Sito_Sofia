@@ -109,13 +109,16 @@
 
       <div class="col-12 col-md-4">
         <label class="form-label fw-semibold">Fluid</label>
-        <select name="fluid" class="form-select">
-          <option value="" disabled>Select fluid…</option>
-          <option value="air" {% if req.fluid == 'air' %}selected{% endif %}>Air</option>
-          <option value="water" {% if water_disabled %}disabled{% endif %} {% if req.fluid == 'water' %}selected{% endif %}>
-            Water{% if water_disabled %} (temporarily unavailable){% endif %}
-          </option>
-        </select>
+        {% if fixed_fluid %}
+          <input type="text" class="form-control bg-light" value="{{ fixed_fluid|capitalize }}" disabled />
+          <input type="hidden" name="fluid" value="{{ fixed_fluid }}" />
+        {% else %}
+          <select name="fluid" class="form-select">
+            <option value="" disabled>Select fluid…</option>
+            <option value="air" {% if req.fluid == 'air' %}selected{% endif %}>Air</option>
+            <option value="water" {% if req.fluid == 'water' %}selected{% endif %}>Water</option>
+          </select>
+        {% endif %}
       </div>
 
       <div class="col-12 col-md-4">

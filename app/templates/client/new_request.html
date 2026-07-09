@@ -151,16 +151,18 @@
         <label class="form-label fw-semibold">
           Fluid
           <i class="bi bi-question-circle text-muted ms-1" data-bs-toggle="tooltip"
-             title="Air testing is mostly used to characterize function (more sensitive). Specify water if the application uses liquid."></i>
+             title="Determined by the selected service."></i>
         </label>
-        <select name="fluid" class="form-select">
-          <option value="" disabled {{ 'selected' if not (form_data and form_data.get('fluid')) else '' }}>Select fluid…</option>
-          <option value="air" {{ 'selected' if form_data and form_data.get('fluid') == 'air' else '' }}>Air</option>
-          <option value="water" {{ 'disabled' if water_disabled else '' }}
-                  {{ 'selected' if form_data and form_data.get('fluid') == 'water' else '' }}>
-            Water{{ ' (temporarily unavailable)' if water_disabled else '' }}
-          </option>
-        </select>
+        {% if fixed_fluid %}
+          <input type="text" class="form-control bg-light" value="{{ fixed_fluid|capitalize }}" disabled />
+          <input type="hidden" name="fluid" value="{{ fixed_fluid }}" />
+        {% else %}
+          <select name="fluid" class="form-select">
+            <option value="" disabled {{ 'selected' if not (form_data and form_data.get('fluid')) else '' }}>Select fluid…</option>
+            <option value="air" {{ 'selected' if form_data and form_data.get('fluid') == 'air' else '' }}>Air</option>
+            <option value="water" {{ 'selected' if form_data and form_data.get('fluid') == 'water' else '' }}>Water</option>
+          </select>
+        {% endif %}
       </div>
 
       <div class="col-12 col-md-4">

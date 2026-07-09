@@ -83,7 +83,7 @@ def new_request(service_id):
         while TestRequest.query.filter_by(tr_number=tr).first():
             tr = generate_tr_number()
 
-        test_request = _build_test_request(tr, service.id)
+        test_request = _build_test_request(tr, service)
         db.session.add(test_request)
         db.session.flush()
 
@@ -98,13 +98,15 @@ def new_request(service_id):
     return _render_new_request_form(service)
 
 
-def _fluid_disabled(fluid_value):
-    """A fluid option is unavailable if the TestService matching its name isn't accepting requests."""
-    service_name = {"water": "Water Flow Test", "air": "Air Flow Test"}.get(fluid_value)
-    if not service_name:
-        return False
-    service = TestService.query.filter_by(name=service_name).first()
-    return bool(service and not service.accepting_requests)
+def _service_fluid(service_name):
+    """The fluid is implied by the service name (Air Flow Test -> air, Water Flow Test -> water).
+    Returns None for a service whose name doesn't imply a single fluid, leaving fluid a free choice."""
+    name = (service_name or "").lower()
+    if "air" in name and "water" not in name:
+        return "air"
+    if "water" in name and "air" not in name:
+        return "water"
+    return None
 
 
 def _render_new_request_form(service, form_data=None):
@@ -125,7 +127,7 @@ def _render_new_request_form(service, form_data=None):
         today=date.today().isoformat(),
         form_data=form_data,
         total_groups=total_groups,
-        water_disabled=_fluid_disabled("water"),
+        fixed_fluid=_service_fluid(service.name),
     )
 
 
@@ -227,7 +229,7 @@ def edit_request(request_id):
         req.report_type = request.form.get("report_type") or None
         req.report_notes = request.form.get("report_notes", "").strip() or None
         req.max_forward_pressure = request.form.get("max_forward_pressure", "").strip() or None
-        req.fluid = request.form.get("fluid") or None
+        req.fluid = _service_fluid(req.service.name) or (request.form.get("fluid") or None)
         req.previously_tested = request.form.get("previously_tested") == "yes"
         req.previous_tr_numbers = request.form.get("previous_tr_numbers", "").strip() or None
         req.test_purpose = request.form.get("test_purpose", "").strip() or None
@@ -273,7 +275,7 @@ def _render_edit_request_form(req, form_data=None):
         location_choices=LOCATION_CHOICES,
         valve_types=VALVE_TYPES,
         today=date.today().isoformat(),
-        water_disabled=_fluid_disabled("water"),
+        fixed_fluid=_service_fluid(req.service.name),
     )
 
 
@@ -338,9 +340,6 @@ def resubmit(request_id):
 def _validate_request_form():
     if request.form.get("priority", "").strip() not in ("high", "medium", "low"):
         return "Please select a priority before submitting."
-    fluid = request.form.get("fluid", "").strip()
-    if fluid and _fluid_disabled(fluid):
-        return f"{fluid.capitalize()} testing is temporarily unavailable — please select a different fluid."
     try:
         num = int(request.form.get("num_groups", 1))
         if num < 1:
@@ -353,7 +352,7 @@ def _validate_request_form():
     return None
 
 
-def _build_test_request(tr, service_id):
+def _build_test_request(tr, service):
     need_by_str = request.form.get("need_by_date", "").strip()
     need_by_date = None
     if need_by_str:
@@ -366,7 +365,7 @@ def _build_test_request(tr, service_id):
         tr_number=tr,
         status="submitted",
         requester_id=current_user.id,
-        service_id=service_id,
+        service_id=service.id,
         priority=request.form.get("priority"),
         need_by_date=need_by_date,
         test_type="Checkvalve Performance",
@@ -379,7 +378,7 @@ def _build_test_request(tr, service_id):
         report_type=request.form.get("report_type") or None,
         report_notes=request.form.get("report_notes", "").strip() or None,
         max_forward_pressure=request.form.get("max_forward_pressure", "").strip() or None,
-        fluid=request.form.get("fluid") or None,
+        fluid=_service_fluid(service.name) or (request.form.get("fluid") or None),
         previously_tested=request.form.get("previously_tested") == "yes",
         previous_tr_numbers=request.form.get("previous_tr_numbers", "").strip() or None,
         test_purpose=request.form.get("test_purpose", "").strip() or None,
