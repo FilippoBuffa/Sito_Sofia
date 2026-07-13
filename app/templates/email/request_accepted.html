@@ -6,7 +6,6 @@
   .header{background:#347A80;color:#fff;border-radius:6px 6px 0 0;padding:20px 32px;margin:-32px -32px 28px;}
   .header h2{margin:0;font-size:1.2rem;}
   .info{background:#f8f8f8;border-left:4px solid #347A80;padding:12px 16px;margin:16px 0;border-radius:4px;line-height:1.8;}
-  .btn{display:inline-block;background:#347A80;color:#fff;padding:12px 28px;border-radius:5px;text-decoration:none;font-weight:bold;margin:16px 0;}
 </style></head>
 <body>
 <div class="card">
@@ -19,7 +18,8 @@
     <strong>Stato:</strong> In Progress<br/>
     {% if req.assigned_engineer %}<strong>Engineer:</strong> {{ req.assigned_engineer.display_name }}<br/>{% endif %}
   </div>
-  <a href="{{ link }}" class="btn">Visualizza richiesta</a>
+  <p>Apri la richiesta nel browser:</p>
+  <p style="word-break:break-all;color:#347A80;">{{ link }}</p>
 </div>
 </body>
 </html>

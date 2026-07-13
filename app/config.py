@@ -9,6 +9,7 @@ BASE_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 class Config:
     SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-key-change-in-production")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    WTF_CSRF_TIME_LIMIT = 28800  # 8 hours — long request form can stay open a full workday
     UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
     ATTACHMENT_FOLDER = os.path.join(BASE_DIR, "uploads", "attachments")
     MAX_CONTENT_LENGTH = 50 * 1024 * 1024  # 50 MB
