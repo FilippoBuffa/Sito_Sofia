@@ -1,7 +1,7 @@
 from flask import Flask, redirect, url_for
 from flask_login import current_user
 from .config import config
-from .extensions import db, login_manager, migrate, csrf, mail
+from .extensions import db, login_manager, migrate, csrf
 
 
 def create_app(config_name="default"):
@@ -13,7 +13,6 @@ def create_app(config_name="default"):
     login_manager.init_app(app)
     migrate.init_app(app, db)
     csrf.init_app(app)
-    mail.init_app(app)
 
     # Register blueprints
     from .blueprints.auth import bp as auth_bp

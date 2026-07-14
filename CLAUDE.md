@@ -12,7 +12,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 cp .env.example .env
-# then edit .env: set SECRET_KEY, MAIL_USERNAME, MAIL_PASSWORD, APP_BASE_URL, PORT
+# then edit .env: set SECRET_KEY, MS_TENANT_ID, MS_CLIENT_ID, MS_CLIENT_SECRET, MS_SENDER_EMAIL, APP_BASE_URL, PORT
 # (PORT only if 8080 is already taken on this machine — keep APP_BASE_URL in sync with it)
 
 export FLASK_APP=run.py

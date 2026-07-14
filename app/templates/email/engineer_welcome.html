@@ -1,22 +1,16 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><style>
-body{font-family:Arial,sans-serif;background:#f4f4f4;margin:0;padding:20px;}
-.card{background:#fff;border-radius:8px;max-width:520px;margin:0 auto;padding:32px;}
-.header{background:#347A80;color:#fff;border-radius:6px 6px 0 0;padding:20px 32px;margin:-32px -32px 28px;}
-.header h2{margin:0;font-size:1.2rem;}
-.creds{background:#f8f8f8;border-left:4px solid #347A80;padding:12px 16px;margin:16px 0;border-radius:4px;}
-.btn{display:inline-block;background:#347A80;color:#fff;padding:12px 28px;border-radius:5px;text-decoration:none;font-weight:bold;margin:16px 0;}
-.footer{margin-top:24px;font-size:0.82rem;color:#888;}
-</style></head><body>
-<div class="card">
-  <div class="header"><h2>Vernay TestLab — Your engineer account</h2></div>
+{% extends "email/_base.html" %}
+{% block title %}Vernay TestLab — Your engineer account{% endblock %}
+{% block header_title %}Your engineer account{% endblock %}
+{% block content %}
   <p>Hi <strong>{{ user.display_name }}</strong>,</p>
   <p>An engineer account has been created for you on the Vernay TestLab portal. Here are your temporary login credentials:</p>
-  <div class="creds">
+  <div class="info">
     <strong>Email:</strong> {{ user.email }}<br/>
     <strong>Temporary password:</strong> {{ temp_password }}
   </div>
   <p>You will be asked to set a new password on your first login.</p>
-  <a href="{{ login_url }}" class="btn">Access the portal</a>
-  <div class="footer">Do not share these credentials. Contact the administrator if you have any issues.</div>
-</div>
-</body></html>
+  <a href="{{ login_url }}" class="btn" style="background:{{ accent|default('#347A80') }};color:#ffffff;text-decoration:none;padding:15px 36px;border-radius:8px;font-weight:700;font-size:1rem;">Access the portal</a>
+{% endblock %}
+{% block footer_note %}
+  <p class="footer-note">Do not share these credentials. Contact the administrator if you have any issues.</p>
+{% endblock %}

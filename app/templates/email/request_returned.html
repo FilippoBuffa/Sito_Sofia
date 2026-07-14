@@ -1,14 +1,7 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><style>
-body{font-family:Arial,sans-serif;background:#f4f4f4;margin:0;padding:20px;}
-.card{background:#fff;border-radius:8px;max-width:520px;margin:0 auto;padding:32px;}
-.header{background:#EB7704;color:#fff;border-radius:6px 6px 0 0;padding:20px 32px;margin:-32px -32px 28px;}
-.header h2{margin:0;font-size:1.2rem;}
-.info{background:#f8f8f8;border-left:4px solid #EB7704;padding:12px 16px;margin:16px 0;border-radius:4px;line-height:1.8;}
-.note{background:#fff8f0;border-left:4px solid #EB7704;padding:12px 16px;margin:16px 0;border-radius:4px;}
-.btn{display:inline-block;background:#EB7704;color:#fff;padding:12px 28px;border-radius:5px;text-decoration:none;font-weight:bold;margin:16px 0;}
-</style></head><body>
-<div class="card">
-  <div class="header"><h2>Request returned for changes</h2></div>
+{% extends "email/_base.html" %}
+{% block title %}Request returned for changes{% endblock %}
+{% block header_title %}Request returned for changes{% endblock %}
+{% block content %}
   <p>Hi <strong>{{ req.requester.display_name }}</strong>,</p>
   <p>The lab has returned your request and requires some changes before proceeding.</p>
   <div class="info">
@@ -17,6 +10,5 @@ body{font-family:Arial,sans-serif;background:#f4f4f4;margin:0;padding:20px;}
   </div>
   <p><strong>Reason for return:</strong></p>
   <div class="note">{{ note }}</div>
-  <a href="{{ link }}" class="btn">Edit & Resubmit</a>
-</div>
-</body></html>
+  <a href="{{ link }}" class="btn" style="background:{{ accent|default('#347A80') }};color:#ffffff;text-decoration:none;padding:15px 36px;border-radius:8px;font-weight:700;font-size:1rem;">Edit &amp; Resubmit</a>
+{% endblock %}

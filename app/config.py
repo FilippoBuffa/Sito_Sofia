@@ -16,13 +16,11 @@ class Config:
     MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024  # 10 MB per file
     MAX_ATTACHMENTS = 3
 
-    # Flask-Mail (Outlook / Office 365 SMTP)
-    MAIL_SERVER = "smtp.office365.com"
-    MAIL_PORT = 587
-    MAIL_USE_TLS = True
-    MAIL_USERNAME = os.environ.get("MAIL_USERNAME")
-    MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD")
-    MAIL_DEFAULT_SENDER = ("Vernay TestLab", os.environ.get("MAIL_USERNAME"))
+    # Outbound mail via Microsoft Graph API (OAuth2 client credentials — no mailbox password stored)
+    MS_TENANT_ID = os.environ.get("MS_TENANT_ID")
+    MS_CLIENT_ID = os.environ.get("MS_CLIENT_ID")
+    MS_CLIENT_SECRET = os.environ.get("MS_CLIENT_SECRET")
+    MS_SENDER_EMAIL = os.environ.get("MS_SENDER_EMAIL")
 
     # Base URL for links in emails
     APP_BASE_URL = os.environ.get("APP_BASE_URL", "http://localhost:5001")

@@ -1,13 +1,45 @@
+import msal
+import requests
 from flask import render_template, current_app
-from flask_mail import Message
-from app.extensions import mail
+
+_msal_app = None
+
+
+def _get_graph_token():
+    global _msal_app
+    if _msal_app is None:
+        _msal_app = msal.ConfidentialClientApplication(
+            client_id=current_app.config["MS_CLIENT_ID"],
+            client_credential=current_app.config["MS_CLIENT_SECRET"],
+            authority=f"https://login.microsoftonline.com/{current_app.config['MS_TENANT_ID']}",
+        )
+    result = _msal_app.acquire_token_for_client(scopes=["https://graph.microsoft.com/.default"])
+    if "access_token" not in result:
+        raise RuntimeError(f"Graph auth failed: {result.get('error_description')}")
+    return result["access_token"]
 
 
 def _send(subject, recipients, template, **kwargs):
+    kwargs.setdefault("base_url", _base_url())
     html_body = render_template(template, **kwargs)
-    msg = Message(subject=subject, recipients=recipients, html=html_body)
+    sender = current_app.config["MS_SENDER_EMAIL"]
+    payload = {
+        "message": {
+            "subject": subject,
+            "body": {"contentType": "HTML", "content": html_body},
+            "toRecipients": [{"emailAddress": {"address": r}} for r in recipients],
+        },
+        "saveToSentItems": "false",
+    }
     try:
-        mail.send(msg)
+        token = _get_graph_token()
+        resp = requests.post(
+            f"https://graph.microsoft.com/v1.0/users/{sender}/sendMail",
+            json=payload,
+            headers={"Authorization": f"Bearer {token}"},
+            timeout=10,
+        )
+        resp.raise_for_status()
     except Exception as e:
         current_app.logger.error(f"[email] Failed to send to {recipients}: {e}")
 
@@ -114,7 +146,7 @@ def send_request_returned(req, note):
         subject=f"[TestLab] {req.tr_number} returned for changes",
         recipients=[req.requester.email],
         template="email/request_returned.html",
-        req=req, note=note,
+        req=req, note=note, accent="#EB7704",
         link=f"{_base_url()}/client/request/{req.id}",
     )
 
