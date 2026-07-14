@@ -16,8 +16,8 @@ class Config:
     MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024  # 10 MB per file
     MAX_ATTACHMENTS = 3
 
-    # Flask-Mail (Gmail SMTP)
-    MAIL_SERVER = "smtp.gmail.com"
+    # Flask-Mail (Outlook / Office 365 SMTP)
+    MAIL_SERVER = "smtp.office365.com"
     MAIL_PORT = 587
     MAIL_USE_TLS = True
     MAIL_USERNAME = os.environ.get("MAIL_USERNAME")
